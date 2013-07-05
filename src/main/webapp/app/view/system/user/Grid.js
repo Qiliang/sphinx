@@ -17,9 +17,9 @@ Ext.define('sphinx.view.system.user.Grid' ,{
                       dataIndex: 'cmis:name'
                   },
                   {
-                      text: '类型',
+                      text: '密码',
                       width: '45%',
-                      dataIndex: 'cmis:objectTypeId',
+                      dataIndex: 'system:password',
                       hidden: false
                   }
               ];

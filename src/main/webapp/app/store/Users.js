@@ -24,7 +24,6 @@ Ext.define('sphinx.store.Users', {
     
     proxy: {
     	type: 'ajax',
-    	//http://localhost:8080/sphinx/browser/A1?cmisselector=query&q=select cmis:name from cmis:item&succinct=true
         url: 'browser/A1',
         limitParam: 'maxItems',
         startParam: 'skipCount',
@@ -32,7 +31,7 @@ Ext.define('sphinx.store.Users', {
         sortParam: 'orderBy',
         extraParams:{  
         	cmisselector:'query',
-        	q:'select * from system:user',
+        	q:'select cmis:name,system:password from system:user',
         	succinct:true
         },
         reader: {

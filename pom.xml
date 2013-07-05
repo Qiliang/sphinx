@@ -37,6 +37,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>3.1.0.RELEASE</version>
+		</dependency>
+		<dependency>
 			<groupId>${opencmis.groupId}</groupId>
 			<artifactId>chemistry-opencmis-commons-api</artifactId>
 			<version>${opencmis.version}</version>
@@ -48,9 +53,8 @@
 		</dependency>
 		<dependency>
 			<groupId>${opencmis.groupId}</groupId>
-			<artifactId>chemistry-opencmis-client-bindings</artifactId>
+			<artifactId>chemistry-opencmis-client-impl</artifactId>
 			<version>${opencmis.version}</version>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>${opencmis.groupId}</groupId>
@@ -66,13 +70,6 @@
 			<groupId>${opencmis.groupId}</groupId>
 			<artifactId>chemistry-opencmis-server-bindings</artifactId>
 			<version>${opencmis.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>${opencmis.groupId}</groupId>
-			<artifactId>chemistry-opencmis-server-bindings-war</artifactId>
-			<version>${opencmis.version}</version>
-			<scope>provided</scope>
-			<type>war</type>
 		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>

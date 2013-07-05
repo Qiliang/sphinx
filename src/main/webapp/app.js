@@ -1,5 +1,26 @@
 Ext.Loader.setConfig({disableCaching:false});
 
+Ext.view.BoundList.override( {
+	getInnerTpl: function(displayField) {
+        return '{[values["' + displayField + '"]]}';
+    }
+});
+
+Ext.Ajax.on("beforerequest", function(conn, options, eOpts){
+	if(!Ext.util.Cookies.get('Authorization')){
+		window.location.href = 'login.html';
+	}
+	options = options || {};
+	options.headers = options.headers || {};
+    options.headers['Authorization']=Ext.util.Cookies.get('Authorization');
+});
+
+Ext.Ajax.on("requestexception", function(conn, response, options, eOpts){
+	//options = options || {};
+});
+
+
+
 Ext.form.action.Submit.override({
   processResponse : function(response){
       this.response = response;
@@ -13,6 +34,7 @@ Ext.application({
 
     appFolder: 'app',
     controllers: [
+                  'App',
                   'FolderTree',
                   'ContentGrid',
                   'ContentGridContextmenu',
@@ -20,10 +42,17 @@ Ext.application({
                   'Search',
                   'RepositoryInfo',
                   'system.Users',
-                  'system.Types'
+                  'system.Groups',
+                  'system.Types',
+                  'object.ACL'
               ],
 
     launch: function() {
+    	if(!Ext.util.Cookies.get('Authorization')){
+    		window.location.href = 'login.html';
+    		return;
+    	}
+    	
     	
         Ext.app = function(){
             var msgCt;
@@ -63,13 +92,9 @@ Ext.application({
     	        id: 'border-example',
     	        layout: 'border',
     	        items: [
-    	        Ext.create('Ext.Component', {
+    	        Ext.create('sphinx.view.Header', {
     	            region: 'north',
-    	            height: 50, // give north and south regions a height
-    	            autoEl: {
-    	                tag: 'div',
-    	                html:'<span style="font-size: 32px;font-weight: bolder;color:#FFF">新农村合作医疗管理系统</span>'
-    	            }
+    	            height: 50
     	        }), {
     	            region: 'west',
     	            id: 'west-panel',
@@ -84,7 +109,7 @@ Ext.application({
     	            items: [
     	                Ext.create('sphinx.view.document.FolderTree',{title:'文档管理',iconCls: 'info',stateId: 'navigation-panel2',stateful: true}),
     	                Ext.create('sphinx.view.system.SystemTree',{title:'系统管理',iconCls: 'info',stateId: 'navigation-panel1', stateful: true}),
-    	                {xtype:'searchTemplate',title:'查询管理',iconCls: 'info',stateId: 'navigation-panel1', stateful: true }
+    	                {xtype:'searchForm',title:'查询管理',iconCls: 'info',stateId: 'navigation-panel1', stateful: true }
     	            
     	          ]
     	        },
@@ -97,7 +122,7 @@ Ext.application({
     	                contentEl: 'center1',
     	                title: '公告',
     	                autoScroll: true
-    	            }, Ext.create('sphinx.view.document.ContentGrid', {title: '数据',closable: true} )
+    	            }
     	            
     	            ]
     	        })]

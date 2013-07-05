@@ -46,10 +46,11 @@ Ext.define('sphinx.view.document.ContentGrid' ,{
         	dock: 'top',
             items:[
 						{
-							xtype: 'panel',
+							itemId:'path',
+							xtype: 'component',
 							autoEl: {
-				                tag: 'span',
-				                html:'<span>路径：</span><span style="font-size: 12px;font-weight: bolder;">文档库/目录1/目录2</span>'
+				                tag: 'div',
+				                html:'路径：</span><span style="font-size: 12px;font-weight: bolder;">文档库/目录1/目录2'
 				                	}
 							
 						},{
@@ -70,11 +71,18 @@ Ext.define('sphinx.view.document.ContentGrid' ,{
 		    displayInfo: true
 		}];
     	
-    	
     	this.callParent(arguments);
     	
-    	
-    	
+    },
+    
+    setFolder : function(record){
+    	this.folder = record;
+    	var component =this.down('component[itemId=path]');
+    	component.update(record.get('cmis:path'));
+    },
+    
+    getFolder : function(record){
+    	return this.folder;
     },
     
     newMenu: {

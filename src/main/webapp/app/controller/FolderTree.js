@@ -3,7 +3,6 @@ Ext.define('sphinx.controller.FolderTree', {
     
     views: ['document.FolderTree'],
     stores: ['FolderTree'],
-    models: ['Content'],
     
     init: function() {
     	this.control({

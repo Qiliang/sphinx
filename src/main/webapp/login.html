@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title></title>
+	<link rel="stylesheet" type="text/css" href="ext/resources/ext-theme-neptune/ext-theme-neptune-all.css">
+    <script type="text/javascript" src="ext/ext-all-debug.js"></script>
+    <script type="text/javascript" src="ext/locale/ext-lang-zh_CN.js"></script>
+    <script type="text/javascript" src="app/etc/base64.js"></script>
+    <script type="text/javascript" >
+    Ext.form.action.Submit.override({
+    	  processResponse : function(response){
+    	      this.response = response;
+    	      return true;
+    	  }
+    });
+    
+    Ext.onReady(function() {
+        var form = Ext.create('Ext.form.Panel', {
+        	renderTo: Ext.getBody(),
+            frame: true,
+            layout: 'form',
+            bodyPadding: '5 5 0',
+            width: 350,
+            url: 'save-form.php',
+            defaultType: 'textfield',
+            border: false,
+
+            items: [{
+                fieldLabel: '用户名',
+                fieldWidth: 60,
+                msgTarget: 'username',
+                allowBlank: false,
+                x: 5,
+                y: 5,
+                name: 'username',
+                anchor: '-5'  
+            }, {
+                fieldLabel: '密码',
+                fieldWidth: 60,
+                x: 5,
+                y: 35,
+                name: 'password',
+                inputType: 'password',
+                allowBlank: false,
+                anchor: '-5'  
+            }],
+            buttons: [{
+                text: '登录',
+                handler: function() {
+                	var form = this.up('form').getForm();
+                    form.submit({
+                   		clientValidation: true,
+                   	    url: 'authentication',
+                   	    success: function(form, action) {
+                    		Ext.util.Cookies.set('Authorization','Basic '+action.response.responseText);
+                    		Ext.util.Cookies.set('username',form.getValues().username);
+		                   	window.location.href='index.html';
+                   	    },
+                   	    failure: function(form, action) {
+                   	    	Ext.Msg.alert(action.response.status+"", action.response.status+"");
+                   		}
+                    });
+                }
+            },{
+                text: '取消',
+                handler: function() {
+                    this.up('form').getForm().reset();
+                }
+            }]
+            
+        });
+
+    });    
+    </script>
+</head>
+<body>
+Authorization
+</body>
+</html>

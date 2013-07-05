@@ -39,6 +39,15 @@ Ext.define('sphinx.view.system.user.CreateUser', {
 	            name: 'propertyValue[1]',
 	            fieldLabel: '名称',
 	            value: 'Text field value'
+            } ,{                	
+	            xtype: 'hiddenfield',
+	            name: 'propertyId[2]',
+	            value: 'system:password'
+            },{
+	            xtype: 'textfield',
+	            name: 'propertyValue[2]',
+	            fieldLabel: '密码',
+	            value: '123'
             } 
             ],
         buttons: [{

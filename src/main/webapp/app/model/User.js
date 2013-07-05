@@ -10,7 +10,8 @@ Ext.define('sphinx.model.User', {
         { name: 'cmis:name' ,type: 'string'},
         { name: 'cmis:lastModificationDate' ,type: 'date', dateFormat:'timestamp'},
         { name: 'cmis:lastModifiedBy' ,type: 'string'},
-        { name: 'cmis:objectTypeId' ,type: 'string'}
+        { name: 'cmis:objectTypeId' ,type: 'string'},
+        { name: 'system:password' ,type: 'string'}
     ],
 
 

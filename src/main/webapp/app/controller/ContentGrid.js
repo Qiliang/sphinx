@@ -11,7 +11,6 @@ Ext.define('sphinx.controller.ContentGrid', {
     	this.control({
             'contentGrid': {
                 itemdblclick: this.viewContent2,
-                itemclick: this.viewContent
             },
             'folderTree': {
             	select: this.onFolderTreeSelect
@@ -20,7 +19,8 @@ Ext.define('sphinx.controller.ContentGrid', {
             	click: this.viewDetail
             },
             'contentGrid': {
-            	itemcontextmenu:this.itemcontextmenu
+            	itemcontextmenu:this.itemcontextmenu,
+            	itemdblclick:this.onItemdblclick
             },
             'contentGrid toolbar #newDocument':{
             	click:this.onNewDocument
@@ -30,18 +30,83 @@ Ext.define('sphinx.controller.ContentGrid', {
             },
             'createFolder button[action=save]':{
             	click:this.onCreateFolder
+            },
+            'create-document button[action=save]':{
+            	click:this.onCreateDocument
             }
         });
     	
     },
 
-    onPanelRendered: function() {
-        //console.log('The ContentGrid was rendered');
+    onItemdblclick:function( widget, record, item, index, e, eOpts ){
+    	
+    	var baseTypeId = record.get('cmis:baseTypeId');
+    	var grid = Ext.ComponentQuery.query('#centerPanel contentGrid')[0];
+    	//var tree = Ext.ComponentQuery.query('#west-panel folderTree')[0];
+    	Ext.query();
+    	if(baseTypeId==='cmis:document')
+    		this.openDocument(record.get('cmis:objectId'));
+    	else if(baseTypeId==='cmis:folder')
+    		this.openFolder(grid,record);
+    },
+    
+    openDocument:function(objectId){
+    	Ext.Ajax.request({
+    		method: 'GET',
+    	    url: 'browser/A1/root',
+    	    params :{
+    	    	objectId: objectId
+    	    },
+    	    success: function(response, opts) {
+    	        Ext.Msg.alert(objectId,response.responseText);
+    	    },
+    	    failure: function(response, opts) {
+    	        console.log('server-side failure with status code ' + response.status);
+    	    }
+    	});
+    },
+    
+    openFolder:function(grid , record){
+    	var store = grid.getStore(); 
+    	var proxy = store.getProxy();
+    	proxy.extraParams.objectId=record.get('cmis:objectId');
+    	store.reload({
+    	    params: {
+    	        page: 1,
+    	}});
+    	grid.setFolder(record);
+    	//tree.expandNode( record );
     },
     
     onNewDocument:function(widget, event ){
     	var view = Ext.create('sphinx.view.document.CreateDocument');
     	view.show();
+    },
+    
+    onCreateDocument:function(button, e, eOpts){
+    	var me= this;
+    	var grid = Ext.ComponentQuery.query('#centerPanel contentGrid')[0];
+    	var folderId = grid.getFolder().get('cmis:objectId');
+    	
+    	var form = button.up('form').getForm();
+    	form.submit({
+    	    clientValidation: true,
+    	    url: 'browser/A1/root',
+    	    params: {
+    	    	objectId: folderId,
+    	    	cmisaction : 'createDocument',
+    	    	succinct:true
+    	    },
+    	    success: function(form, action) {
+    	       Ext.app.msg('Success', action.response.responseText);
+    	       me.getObjectsStore().reload();
+    	       me.getFolderTreeStore().reload();
+    	    },
+    	    failure: function(form, action) {
+    	    	Ext.Msg.alert("info",action.response.responseText);
+    	    	
+    	    }
+    	});
     },
     
     onNewFolder:function(widget, event ){
@@ -50,14 +115,14 @@ Ext.define('sphinx.controller.ContentGrid', {
     },
     onCreateFolder:function(button, e, eOpts){
     	var me= this;
-    	var folderTree = Ext.ComponentQuery.query('folderTree')[0];
-    	var selModel = folderTree.getSelectionModel();
+    	var grid = Ext.ComponentQuery.query('#centerPanel contentGrid')[0];
+    	var folderId = grid.getFolder().get('cmis:objectId');
     	var form = button.up('form').getForm();
     	form.submit({
     	    clientValidation: true,
     	    url: 'browser/A1/root',
     	    params: {
-    	    	objectId: selModel.selectionStart.internalId,
+    	    	objectId: folderId,
     	    	cmisaction : 'createFolder',
     	    	succinct:true
     	    },
@@ -84,28 +149,17 @@ Ext.define('sphinx.controller.ContentGrid', {
     	documentDetail.show();
     },
     
-    viewContent: function( grid, record, item, index, e, eOpts ){
-    	var view = Ext.getCmp('properties');
-    	view.setSource(record.raw);
-    },
-    
-    
-    onFolderTreeSelect: function( cmp, record, index, eOpts ){
+    onFolderTreeSelect: function( widget, record, index, eOpts ){
+    	//var tree = Ext.ComponentQuery.query('#west-panel folderTree')[0];
     	var grid = Ext.ComponentQuery.query('#centerPanel contentGrid')[0];
-    	//var grid = Ext.getCmp('contentGrid');
     	var centerPanel = Ext.getCmp('centerPanel');
     	if(!grid){
     		grid =centerPanel.add({xtype:'contentGrid',title: '数据',closable: true});
     	}
     	centerPanel.setActiveTab(grid);
     	
-    	var store = grid.getStore(); 
-    	var proxy = store.getProxy();
-    	proxy.extraParams.objectId=record.internalId;
-    	store.reload({
-    	    params: {
-    	        page: 1,
-    	}});
+    	this.openFolder(grid,record);
+    	
     }
     
     

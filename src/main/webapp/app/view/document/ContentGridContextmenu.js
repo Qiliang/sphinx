@@ -24,6 +24,9 @@ Ext.define('sphinx.view.document.ContentGridContextmenu' ,{
     },{
         text: '重命名'
     },{
+    	itemId: 'acl',
+        text: '权限'
+    },{
     	itemId: 'properties',
         text: '属性'
     }]

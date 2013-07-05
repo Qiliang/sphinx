@@ -1,13 +1,13 @@
 Ext.define('sphinx.view.document.CreateDocument', {
     extend: 'Ext.window.Window',
-    alias: 'widget.createDcoument',
+    alias: 'widget.create-document',
 
     layout: 'fit',
     autoShow: false,
     title:'新建文档',
     initComponent: function() {
-    	this.items= [this.formPanel];
     	
+    	this.items= [this.formPanel];
 
         this.callParent(arguments);
     },
@@ -21,77 +21,33 @@ Ext.define('sphinx.view.document.CreateDocument', {
             labelWidth: 90,
             anchor: '100%'
         },
-
-        items: [{
-            xtype: 'textfield',
-            name: 'textfield1',
-            fieldLabel: 'Text field',
-            value: 'Text field value'
-        }, {
-            xtype: 'hiddenfield',
-            name: 'hidden1',
-            value: 'Hidden field value'
-        },{
-            xtype: 'textfield',
-            name: 'password1',
-            inputType: 'password',
-            fieldLabel: 'Password field'
-        }, {
-            xtype: 'filefield',
-            name: 'file1',
-            fieldLabel: 'File upload'
-        }, {
-            xtype: 'textareafield',
-            name: 'textarea1',
-            fieldLabel: 'TextArea',
-            value: 'Textarea value'
-        }, {
-            xtype: 'displayfield',
-            name: 'displayfield1',
-            fieldLabel: 'Display field',
-            value: 'Display field <span style="color:green;">value</span>'
-        }, {
-            xtype: 'numberfield',
-            name: 'numberfield1',
-            fieldLabel: 'Number field',
-            value: 5,
-            minValue: 0,
-            maxValue: 50
-        }, {
-            xtype: 'checkboxfield',
-            name: 'checkbox1',
-            fieldLabel: 'Checkbox',
-            boxLabel: 'box label'
-        }, {
-            xtype: 'radiofield',
-            name: 'radio1',
-            value: 'radiovalue1',
-            fieldLabel: 'Radio buttons',
-            boxLabel: 'radio 1'
-        }, {
-            xtype: 'radiofield',
-            name: 'radio1',
-            value: 'radiovalue2',
-            fieldLabel: '',
-            labelSeparator: '',
-            hideEmptyLabel: false,
-            boxLabel: 'radio 2'
-        }, {
-            xtype: 'datefield',
-            name: 'date1',
-            fieldLabel: 'Date Field'
-        }, {
-            xtype: 'timefield',
-            name: 'time1',
-            fieldLabel: 'Time Field',
-            minValue: '1:30 AM',
-            maxValue: '9:15 PM'
-        }],
+        items: [
+			{                	
+	            xtype: 'hiddenfield',
+	            name: 'propertyId[0]',
+	            value: 'cmis:objectTypeId'
+            },{                	
+	            xtype: 'hiddenfield',
+	            name: 'propertyValue[0]',
+	            value: 'cmis:document'
+            },{                	
+	            xtype: 'hiddenfield',
+	            name: 'propertyId[1]',
+	            value: 'cmis:name'
+            },{
+	            xtype: 'textfield',
+	            name: 'propertyValue[1]',
+	            fieldLabel: '名称',
+	            value: 'Text field value'
+            } ,{
+	            xtype: 'filefield',
+	            name: 'content',
+	            fieldLabel: '内容',
+            } 
+            ],
         buttons: [{
 	        text: 'Save',
-	        handler: function() {
-	            this.up('form').getForm().isValid();
-	        }
+	        action: 'save',
 	    },{
 	        text: 'Cancel',
 	        handler: function() {

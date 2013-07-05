@@ -346,16 +346,25 @@ public class DefaultTypeSystemCreator implements TypeCreator {
         
         //创建用户类型
         typesList.add(createUserType());         
+        typesList.add(createGroupType());        
         
         return typesList;
     }
     
     
     private static TypeDefinition createUserType(){
-    	InMemoryItemTypeDefinition userType = new InMemoryItemTypeDefinition("system:user", "system:user");
+    	InMemoryItemTypeDefinition userType = new InMemoryItemTypeDefinition("system:user", "User");
     	Map<String, PropertyDefinition<?>>  propertyDefinitions = new HashMap<String, PropertyDefinition<?>>();
-    	PropertyCreationHelper.createIdMultiDefinition("system:groups", "groups", Updatability.READWRITE);
-    	PropertyCreationHelper.createIdMultiDefinition("system:roles", "roles", Updatability.READWRITE);
+    	propertyDefinitions.put("system:password", PropertyCreationHelper.createStringDefinition("system:password", "password", Updatability.READWRITE));
+    	
+    	userType.addCustomPropertyDefinitions(propertyDefinitions);
+    	return userType;
+    }
+    
+    private static TypeDefinition createGroupType(){
+    	InMemoryItemTypeDefinition userType = new InMemoryItemTypeDefinition("system:group", "Group");
+    	Map<String, PropertyDefinition<?>>  propertyDefinitions = new HashMap<String, PropertyDefinition<?>>();
+    	propertyDefinitions.put("system:users", PropertyCreationHelper.createStringDefinition("system:users", "users", Updatability.READWRITE));
     	userType.addCustomPropertyDefinitions(propertyDefinitions);
     	return userType;
     }

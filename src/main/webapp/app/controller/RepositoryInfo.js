@@ -5,9 +5,6 @@ Ext.define('sphinx.controller.RepositoryInfo', {
     
     init: function() {
     	this.control({
-            'searchTemplate toolbar #newSearch': {
-                click: this.onActionClick,
-            }
         });
     	
     	sphinx.model.RepositoryInfo.load(null, {
@@ -26,16 +23,6 @@ Ext.define('sphinx.controller.RepositoryInfo', {
     	        //if operation is unsuccessful, record is null
     	    }
     	});
-    },
-    
-    
-    onActionClick: function(){
-    	var searchForm= Ext.create('sphinx.view.search.SearchForm');
-    	searchForm.show();
     }
-
-    
-    
-    
     
 });

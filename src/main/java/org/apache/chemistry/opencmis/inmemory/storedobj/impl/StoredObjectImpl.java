@@ -237,12 +237,12 @@ public class StoredObjectImpl implements StoredObject {
             properties.put(PropertyIds.OBJECT_TYPE_ID, objFactory.createPropertyIdData(PropertyIds.OBJECT_TYPE_ID,
                     getTypeId()));
         }
-        // set the base type id outside becaus it requires the type definition
-        // if (FilterParser.isContainedInFilter(PropertyIds.CMIS_BASE_TYPE_ID,
-        // requestedIds)) {
-        // properties.add(objFactory.createPropertyIdData(PropertyIds.
-        // CMIS_BASE_TYPE_ID, getBaseTypeId()));
-        // }
+//         set the base type id outside becaus it requires the type definition
+//         if (FilterParser.isContainedInFilter(PropertyIds.CMIS_BASE_TYPE_ID,
+//         requestedIds)) {
+//         properties.add(objFactory.createPropertyIdData(PropertyIds.
+//         CMIS_BASE_TYPE_ID, getBaseTypeId()));
+//         }
         if (FilterParser.isContainedInFilter(PropertyIds.CREATED_BY, requestedIds)) {
             properties.put(PropertyIds.CREATED_BY, objFactory.createPropertyStringData(PropertyIds.CREATED_BY,
                     getCreatedBy()));

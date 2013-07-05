@@ -129,7 +129,7 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
         initStorageManager(parameters);
 
         fillRepositoryIfConfigured(parameters);
-
+        
         Long cleanInterval = ConfigurationSettings
                 .getConfigurationValueAsLong(ConfigConstants.CLEAN_REPOSITORY_INTERVAL);
         if (null != cleanInterval && cleanInterval > 0) {
@@ -320,6 +320,7 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
 
     private void fillRepositoryIfConfigured(Map<String, String> parameters) {
 
+    	
         class DummyCallContext implements CallContext {
 
             public String get(String key) {
@@ -447,7 +448,6 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
             }
             // Create a hierarchy of folders and fill it with some documents
             ObjectGenerator gen = new ObjectGenerator(objectFactory, svc, svc, svc, repositoryId, contentKind);
-
             gen.setNumberOfDocumentsToCreatePerFolder(docsPerLevel);
 
             // Set the type id for all created documents:
@@ -481,12 +481,13 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
             // accessed from everywhere
             DummyCallContext ctx = new DummyCallContext();
             // create thread local storage and attach call context
-            getService(ctx);
+            CmisService     cmisService=      getService(ctx);
 
             // Build the tree
             RepositoryInfo rep = svc.getRepositoryInfo(repositoryId, null);
             String rootFolderId = rep.getRootFolderId();
-
+            SystemObjectCreator soc=new SystemObjectCreator(rep.getId(), cmisService);
+            soc.createObjects();
             try {
                 gen.createFolderHierachy(levels, childrenPerLevel, rootFolderId);
                 // Dump the tree
