@@ -41,7 +41,7 @@ public interface MultiFiling extends Filing {
      * @param parent
      *            new parent folder of the document.
      */
-    void addParent(Folder parent);
+    void addParent(String parentId);
 
     /**
      * Remove this object from the children of parent
@@ -49,5 +49,5 @@ public interface MultiFiling extends Filing {
      * @param parent
      *            parent folder of the document
      */
-    void removeParent(Folder parent);
+    void removeParent(String parentId);
 }

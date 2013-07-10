@@ -27,124 +27,147 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisNameConstraintViolat
 import org.apache.chemistry.opencmis.inmemory.NameValidator;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.MultiFiling;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
+
+import com.mongodb.BasicDBList;
 
 /**
  * AbstractMultiPathImpl is the common superclass of all objects hold in the
  * repository that have multiple parent folders, these are: Folders
- *
+ * 
  * @author Jens
  */
 public abstract class AbstractMultiFilingImpl extends StoredObjectImpl implements MultiFiling {
 
-    protected List<Folder> fParents = new ArrayList<Folder>(1);
+	// protected List<Folder> fParents = new ArrayList<Folder>(1);
 
-    AbstractMultiFilingImpl(ObjectStoreImpl objStore) {
-        super(objStore);
-    }
+	AbstractMultiFilingImpl(ObjectStore objStore) {
+		super(objStore);
+	}
 
-    public void addParent(Folder parent) {
-      try {
-          fObjStore.lock();
-          addParentIntern(parent);
-      } finally {
-        fObjStore.unlock();
-      }
-    }
+	public void addParent(String parentId) {
+		try {
+			fObjStore.lock();
+			addParentIntern(parentId);
+		} finally {
+			fObjStore.unlock();
+		}
+	}
 
-    private void addParentIntern(Folder parent) {
-        if (parent.hasChild(getName())) {
-            throw new IllegalArgumentException(
-                    "Cannot assign new parent folder, this name already exists in target folder.");
-        }
+	private void addParentIntern(String parentId) {
 
-        if (null == fParents) {
-            fParents = new ArrayList<Folder>();
-        }
+		Folder folder = fObjStore.getFolderById(parentId);
 
-        fParents.add(parent);
-    }
+		if (folder.hasChild(getName())) {
+			throw new IllegalArgumentException("Cannot assign new parent folder, this name already exists in target folder.");
+		}
 
-    public void removeParent(Folder parent) {
-        try {
-            fObjStore.lock();
-            removeParentIntern(parent);
-        } finally {
-          fObjStore.unlock();
-        }
-    }
+		BasicDBList list = (BasicDBList) get("parentIds");
+		if (list == null)
+			list = new BasicDBList();
 
-    private void removeParentIntern(Folder parent) {
-        fParents.remove(parent);
-        if (fParents.isEmpty()) {
-            fParents = null;
-        }
-    }
+		list.add(parentId);
+		put("parentIds", list);
+	}
 
-    public List<Folder> getParents() {
-        if (null == fParents)
-            return Collections.emptyList();
-        else
-            return fParents;
-    }
+	public void removeParent(String parentId) {
+		try {
+			fObjStore.lock();
+			removeParentIntern(parentId);
+		} finally {
+			fObjStore.unlock();
+		}
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.opencmis.inmemory.storedobj.api.MultiParentPath#getParents()
-     */
-    public List<Folder> getParents(String user) {
-        if (null == fParents)
-            return Collections.emptyList();
-        else if (null == user)
-            return Collections.unmodifiableList(fParents);
-        else {
-            List<Folder> visibleParents = new ArrayList<Folder>(fParents.size());
-            for (Folder folder : fParents)
-                if (fObjStore.hasReadAccess(user, folder))
-                    visibleParents.add(folder);
-            return visibleParents;
-        }
-    }
+	private void removeParentIntern(String parentId) {
 
-    public boolean hasParent() {
-      return null != fParents && !fParents.isEmpty();
-    }
+		BasicDBList list = (BasicDBList) get("parentIds");
+		if (list == null)
+			list = new BasicDBList();
 
-    public String getPathSegment() {
-        return getName();
-    }
+		list.remove(parentId);
+		put("parentIds", list);
+	}
 
-    public void move(Folder oldParent, Folder newParent) {
-        try {
-            fObjStore.lock();
-            addParentIntern(newParent);
-            removeParentIntern(oldParent);
-        } finally {
-          fObjStore.unlock();
-        }
-    }
+	public String[] getParentIds() {
+		BasicDBList list = (BasicDBList) get("parentIds");
 
-    @Override
-    public void rename(String newName) {
-        try {
-            if (!NameValidator.isValidId(newName)) {
-                throw new CmisInvalidArgumentException(NameValidator.ERROR_ILLEGAL_NAME);
-            }
-            fObjStore.lock();
-            for (Folder folder : fParents) {
-              if (folder == null) {
-                throw new CmisInvalidArgumentException("Root folder cannot be renamed.");
-            }
-              if (folder.hasChild(newName)) {
-                throw new CmisNameConstraintViolationException("Cannot rename object to " + newName
-                          + ". This path already exists in parent " + folder.getPath() + ".");
-            }
-            }
-            setName(newName);
-        } finally {
-          fObjStore.unlock();
-        }
-    }
+		if (null == list)
+			return new String[] {};
+		else {
+			return list.toArray(new String[] {});
+		}
+
+	}
+
+	private List<Folder> getParents() {
+		List<Folder> folders = new ArrayList<Folder>();
+		BasicDBList list = (BasicDBList) get("parentIds");
+		for (Object o : list) {
+			String parentId = o.toString();
+			folders.add(fObjStore.getFolderById(parentId));
+		}
+		return folders;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.apache.opencmis.inmemory.storedobj.api.MultiParentPath#getParents()
+	 */
+	public List<Folder> getParents(String user) {
+		if (null == get("parentIds"))
+			return Collections.emptyList();
+		else if (null == user)
+			return Collections.unmodifiableList(getParents());
+		else {
+			List<Folder> visibleParents = new ArrayList<Folder>();
+			for (Folder folder : getParents())
+				if (fObjStore.hasReadAccess(user, folder))
+					visibleParents.add(folder);
+			return visibleParents;
+		}
+	}
+
+	public boolean hasParent() {
+		BasicDBList list = (BasicDBList) get("parentIds");
+		return null != list && !list.isEmpty();
+	}
+
+	public String getPathSegment() {
+		return getName();
+	}
+
+	public void move(Folder oldParent, Folder newParent) {
+		try {
+			fObjStore.lock();
+			addParentIntern(newParent.getId());
+			removeParentIntern(oldParent.getId());
+		} finally {
+			fObjStore.unlock();
+		}
+	}
+
+	@Override
+	public void rename(String newName) {
+		try {
+			if (!NameValidator.isValidId(newName)) {
+				throw new CmisInvalidArgumentException(NameValidator.ERROR_ILLEGAL_NAME);
+			}
+			fObjStore.lock();
+			for (Folder folder : getParents()) {
+				if (folder == null) {
+					throw new CmisInvalidArgumentException("Root folder cannot be renamed.");
+				}
+				if (folder.hasChild(newName)) {
+					throw new CmisNameConstraintViolationException("Cannot rename object to " + newName + ". This path already exists in parent " + folder.getPath() + ".");
+				}
+			}
+			setName(newName);
+		} finally {
+			fObjStore.unlock();
+		}
+	}
 
 }

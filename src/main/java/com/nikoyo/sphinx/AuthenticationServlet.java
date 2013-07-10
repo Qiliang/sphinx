@@ -10,6 +10,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.chemistry.opencmis.client.api.ItemIterable;
+import org.apache.chemistry.opencmis.client.api.ObjectType;
 import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.chemistry.opencmis.client.api.Repository;
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -41,7 +42,8 @@ public class AuthenticationServlet extends HttpServlet {
 		}
 		
 		Session session=	login();
-		
+		ObjectType objectType=session.getTypeDefinition("system:user");
+		System.out.println(objectType);
 		ItemIterable<QueryResult> result =session.query(String.format("select cmis:name from system:user where cmis:name='%s' and system:password='%s'",username,password), false);
 		if(!success(result)){
 			resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

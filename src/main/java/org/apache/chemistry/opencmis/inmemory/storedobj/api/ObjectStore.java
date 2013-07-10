@@ -20,6 +20,7 @@ package org.apache.chemistry.opencmis.inmemory.storedobj.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
@@ -66,6 +67,8 @@ public interface ObjectStore {
      * @return the object identified by this id
      */
     StoredObject getObjectById(String folderId);
+    
+    Folder getFolderById(String folderId);
 
     /**
      * Deletes an object from the store. For a folders the folder must be empty.
@@ -301,4 +304,20 @@ public interface ObjectStore {
      */
     List<StoredObject> getRelationships(String objectId, List<String> typeIds,
             RelationshipDirection direction);
+    
+    
+    String storeObject(StoredObject so);
+    
+    Acl getAcl(int aclId);
+    
+    void lock();
+    
+    void unlock();
+    
+    boolean hasReadAccess(String principalId, StoredObject so);
+    
+    void removeVersion(DocumentVersion vers);
+    
+    Set<String> getIds();
+    
 }

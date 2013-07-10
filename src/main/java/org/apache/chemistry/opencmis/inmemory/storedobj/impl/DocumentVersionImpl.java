@@ -37,6 +37,7 @@ import org.apache.chemistry.opencmis.inmemory.FilterParser;
 import org.apache.chemistry.opencmis.inmemory.server.InMemoryServiceContext;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
 
 /**
@@ -58,19 +59,19 @@ public class DocumentVersionImpl extends StoredObjectImpl implements DocumentVer
     String label;
 
     public DocumentVersionImpl(String repositoryId, VersionedDocument container, ContentStream content,
-            VersioningState verState, ObjectStoreImpl objStore) {
+            VersioningState verState, ObjectStore objStore) {
         super(objStore);
         setRepositoryId(repositoryId);
         fContainer = container;
         setContent(content, false);
         fIsMajor = verState == VersioningState.MAJOR || verState == null;
         fIsPwc = verState == VersioningState.CHECKEDOUT;
-        fProperties = new HashMap<String, PropertyData<?>>();
+        //fProperties = new HashMap<String, PropertyData<?>>();
         // copy user properties from latest version
         DocumentVersionImpl src = (DocumentVersionImpl)container.getLatestVersion(false);
-        if (null != src && null != src.fProperties) {
-            for (Entry<String, PropertyData<?>> prop : src.fProperties.entrySet()) {
-                fProperties.put(prop.getKey(), prop.getValue());
+        if (null != src && null != src.getProperties()) {
+            for (Entry<String, PropertyData<?>> prop : src.getProperties().entrySet()) {
+            	getProperties().put(prop.getKey(), prop.getValue());
             }
         }
 
@@ -301,11 +302,11 @@ public class DocumentVersionImpl extends StoredObjectImpl implements DocumentVer
         fContainer.move(oldParent, newParent);
     }
 
-    public void addParent(Folder parent) {
-        fContainer.addParent(parent);
+    public void addParent(String parentId) {
+        fContainer.addParent(parentId);
     }
 
-    public void removeParent(Folder parent) {
+    public void removeParent(String parent) {
         fContainer.removeParent(parent);
     }
 

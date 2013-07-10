@@ -25,96 +25,98 @@ import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
 
+import com.mongodb.BasicDBObject;
 
-public class InMemoryAce {
+public class InMemoryAce extends BasicDBObject {
 
-    private final String principalId;    
-    private Permission permission;
-    private static InMemoryAce DEFAULT_ACE = new InMemoryAce(InMemoryAce.getAnyoneUser(), Permission.ALL);
-    
-    public static final String getAnyoneUser() {
-        return "anyone";
-    }
+	// private final String principalId;
+	// private Permission permission;
+	private static InMemoryAce DEFAULT_ACE = new InMemoryAce(InMemoryAce.getAnyoneUser(), Permission.ALL);
 
-    public static final String getAnonymousUser() {
-        return "anonymous";
-    }
-    
-    public static final InMemoryAce getDefaultAce() {
-        return DEFAULT_ACE;
-    }
-    
-    public InMemoryAce(Ace commonsAce) {
-        if (null == commonsAce || null == commonsAce.getPrincipalId() || null == commonsAce.getPermissions())
-            throw new IllegalArgumentException("Cannot create InMemoryAce with null value");
-        List<String> perms = commonsAce.getPermissions();
-        if (perms.size() != 1)
-            throw new IllegalArgumentException("InMemory only supports ACEs with a single permission.");
-        String perm = perms.get(0);
-        this.principalId = commonsAce.getPrincipalId();
-        this.permission = Permission.fromCmisString(perm);        
-    }
+	public static final String getAnyoneUser() {
+		return "anyone";
+	}
 
-    public InMemoryAce(String prinicpalId, Permission permission) {
-        if (null == prinicpalId || null == permission)
-            throw new IllegalArgumentException("Cannot create InMemoryAce with null value");
-        
-        this.principalId = prinicpalId;
-        this.permission = permission;        
-    }
-    
-    public String getPrincipalId() {
-        return principalId;
-    }
-    
-    public Permission getPermission() {
-        return permission;
-    }
-    
-    public void setPermission(Permission newPermission) {
-        permission = newPermission;
-    }
+	public static final String getAnonymousUser() {
+		return "anonymous";
+	}
 
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((permission == null) ? 0 : permission.hashCode());
-        result = prime * result + ((principalId == null) ? 0 : principalId.hashCode());
-        return result;
-    }
+	public static final InMemoryAce getDefaultAce() {
+		return DEFAULT_ACE;
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        InMemoryAce other = (InMemoryAce) obj;
-        if (permission != other.permission)
-            return false;
-        if (principalId == null) {
-            if (other.principalId != null)
-                return false;
-        } else if (!principalId.equals(other.principalId))
-            return false;
-        return true;
-    }
+	public InMemoryAce(Ace commonsAce) {
+		if (null == commonsAce || null == commonsAce.getPrincipalId() || null == commonsAce.getPermissions())
+			throw new IllegalArgumentException("Cannot create InMemoryAce with null value");
+		List<String> perms = commonsAce.getPermissions();
+		if (perms.size() != 1)
+			throw new IllegalArgumentException("InMemory only supports ACEs with a single permission.");
+		String perm = perms.get(0);
+		put("principalId", commonsAce.getPrincipalId());
+		put("permission", Permission.fromCmisString(perm).value());
+		// this.principalId = commonsAce.getPrincipalId();
+		// this.permission = Permission.fromCmisString(perm);
+	}
 
-    public boolean hasPermission(Permission permission2) {
-        return this.permission.compareTo(permission2) >= 0;
-    }
+	public InMemoryAce(String prinicpalId, Permission permission) {
+		if (null == prinicpalId || null == permission)
+			throw new IllegalArgumentException("Cannot create InMemoryAce with null value");
 
-    @Override
-    public String toString() {
-        return "InMemoryAce [principalId=" + principalId + ", permission=" + permission + "]";
-    }
+		put("principalId", prinicpalId);
+		put("permission", permission.value());
+	}
 
-    public Ace toCommonsAce() {
-        return new AccessControlEntryImpl(new AccessControlPrincipalDataImpl(principalId), 
-                Collections.singletonList(permission.toCmisString())); 
-    }
-    
+	public String getPrincipalId() {
+		return getString("principalId");
+	}
+
+	public Permission getPermission() {
+		return Permission.fromValue(getString("permission"));
+	}
+
+	public void setPermission(Permission newPermission) {
+		put("permission", newPermission.value());
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((getPermission() == null) ? 0 : getPermission().hashCode());
+		result = prime * result + ((getPrincipalId() == null) ? 0 : getPrincipalId().hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		InMemoryAce other = (InMemoryAce) obj;
+		if (getPermission() != other.getPermission())
+			return false;
+		if (getPrincipalId() == null) {
+			if (other.getPrincipalId() != null)
+				return false;
+		} else if (!getPrincipalId().equals(other.getPrincipalId()))
+			return false;
+		return true;
+	}
+
+	public boolean hasPermission(Permission permission2) {
+		return this.getPermission().compareTo(permission2) >= 0;
+	}
+
+	@Override
+	public String toString() {
+		return "InMemoryAce [principalId=" + getPrincipalId() + ", permission=" + getPermission() + "]";
+	}
+
+	public Ace toCommonsAce() {
+		return new AccessControlEntryImpl(new AccessControlPrincipalDataImpl(getPrincipalId()), Collections.singletonList(getPermission().toCmisString()));
+	}
+
 }

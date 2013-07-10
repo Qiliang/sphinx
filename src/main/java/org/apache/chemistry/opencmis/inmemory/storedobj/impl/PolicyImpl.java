@@ -25,11 +25,12 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Policy;
 
 public class PolicyImpl extends StoredObjectImpl implements Policy {
 
-    PolicyImpl(ObjectStoreImpl objStore) {
+    PolicyImpl(ObjectStore objStore) {
         super(objStore);
     }
 

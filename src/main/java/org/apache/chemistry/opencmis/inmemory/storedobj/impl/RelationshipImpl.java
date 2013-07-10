@@ -25,6 +25,7 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Relationship;
 
 public class RelationshipImpl extends StoredObjectImpl implements Relationship {
@@ -32,7 +33,7 @@ public class RelationshipImpl extends StoredObjectImpl implements Relationship {
     private String sourceObjId;
     private String targetObjId;
 
-    RelationshipImpl(ObjectStoreImpl objStore) {
+    RelationshipImpl(ObjectStore objStore) {
         super(objStore);
     }
 

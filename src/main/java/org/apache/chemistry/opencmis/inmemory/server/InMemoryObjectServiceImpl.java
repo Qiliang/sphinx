@@ -1190,12 +1190,7 @@ public class InMemoryObjectServiceImpl extends InMemoryAbstractServiceImpl {
             if (targetId.equals(sourceId)) {
                 return true;
             }
-            targetFolder = targetFolder.getParent();
-            if (null != targetFolder) {
-                targetId = targetFolder.getId();
-            } else {
-                targetId = null;
-            }
+            targetId = targetFolder.getParentId();
         }
         return false;
     }

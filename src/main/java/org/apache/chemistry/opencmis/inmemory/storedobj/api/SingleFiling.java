@@ -35,7 +35,9 @@ public interface SingleFiling extends Filing {
     /**
      * @return
      */
-    Folder getParent();
+    String getParentId();
+    
+    Folder getParentFolder();
 
     /**
      * Put the document in a folder and set the parent. This method should not
@@ -46,6 +48,6 @@ public interface SingleFiling extends Filing {
      * @param parent
      *            parent folder of the document to be assigned.
      */
-    void setParent(Folder parent);
+    void setParentId(String parentId);
 
 }

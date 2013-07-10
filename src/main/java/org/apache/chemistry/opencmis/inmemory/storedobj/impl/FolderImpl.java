@@ -45,6 +45,7 @@ import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Filing;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.MultiFiling;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.SingleFiling;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
@@ -54,11 +55,11 @@ import org.slf4j.LoggerFactory;
 public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSingleFilingImpl.class.getName());
 
-    FolderImpl(ObjectStoreImpl objStore) {
+    FolderImpl(ObjectStore objStore) {
         super(objStore);
     }
 
-    public FolderImpl(ObjectStoreImpl objStore, String name, Folder parent) {
+    public FolderImpl(ObjectStore objStore, String name, Folder parent) {
         super(objStore);
         init(name, parent);
     }
@@ -72,7 +73,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
             if (hasChild) {
                 throw new CmisNameConstraintViolationException("Cannot create folder " + name + ". Name already exists in parent folder");
             }
-            folder.setParent(this);
+            folder.setParentId(this.getId());
         } finally {
             fObjStore.unlock();
         }
@@ -110,9 +111,9 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
             }
 
             if (so instanceof SingleFiling) {
-                ((SingleFiling) so).setParent(this);
+                ((SingleFiling) so).setParentId(this.getId());
             } else if (so instanceof MultiFiling) {
-                ((MultiFiling) so).addParent(this);
+                ((MultiFiling) so).addParent(this.getId());
             } else {
                 throw new CmisInvalidArgumentException("Cannot create document, object is not fileable.");
             }
@@ -125,7 +126,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
     public ChildrenResult getChildren(int maxItems, int skipCount, String user) {
         List<StoredObject> result = new ArrayList<StoredObject>();
         for (String id : fObjStore.getIds()) {
-            StoredObject obj = fObjStore.getObject(id);
+            StoredObject obj = fObjStore.getObjectById(id);
             if (obj instanceof Filing) {
                 Filing pathObj = (Filing) obj;
                 if (fObjStore.hasReadAccess(user, obj) && pathObj.getParents(user).contains(this)) {
@@ -160,10 +161,10 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
     public ChildrenResult getFolderChildren(int maxItems, int skipCount, String user) {
         List<Folder> result = new ArrayList<Folder>();
         for (String id : fObjStore.getIds()) {
-            StoredObject obj = fObjStore.getObject(id);
+            StoredObject obj = fObjStore.getObjectById(id);
             if (fObjStore.hasReadAccess(user, obj) && obj instanceof SingleFiling) {
                 SingleFiling pathObj = (SingleFiling) obj;
-                if (pathObj.getParent() == this && pathObj instanceof Folder) {
+                if (this.getId().equals(pathObj.getParentId()) && pathObj instanceof Folder) {
                     result.add((Folder) obj);
                 }
             }
@@ -179,7 +180,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 
     public boolean hasChild(String name) {
         for (String id : fObjStore.getIds()) {
-            StoredObject obj = fObjStore.getObject(id);
+            StoredObject obj = fObjStore.getObjectById(id);
             if (obj instanceof Filing) {
                 Filing pathObj = (Filing) obj;
                 if (pathObj.getParents(null).contains(this) && obj.getName().equals(name)) {
@@ -199,7 +200,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
         // add folder specific properties
 
         if (FilterParser.isContainedInFilter(PropertyIds.PARENT_ID, requestedIds)) {
-            String parentId = getParent() == null ? null : getParent().getId();
+            String parentId = getParentId() ;
             properties.put(PropertyIds.PARENT_ID, objFactory.createPropertyIdData(PropertyIds.PARENT_ID,
                     parentId));
         }
@@ -222,7 +223,9 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
             throw new CmisInvalidArgumentException(NameValidator.ERROR_ILLEGAL_NAME);
         }
         setName(name);
-        setParent(parent);
+        if(parent!=null){
+        	setParentId(parent.getId());
+        }
     }
 
     private static void sortFolderList(List<? extends StoredObject> list) {
@@ -252,11 +255,11 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 
             if (so instanceof SingleFiling) {
                 SingleFiling pathObj = (SingleFiling) so;
-                pathObj.setParent(newParent);
+                pathObj.setParentId(newParent.getId());
             } else if (so instanceof MultiFiling) {
                 MultiFiling pathObj = (MultiFiling) so;
-                pathObj.addParent(newParent);
-                pathObj.removeParent(oldParent);
+                pathObj.addParent(newParent.getId());
+                pathObj.removeParent(oldParent.getId());
             }
         } finally {
             fObjStore.unlock();
@@ -306,4 +309,5 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
     public boolean hasRendition(String user) {
         return true;
     }
+
 }

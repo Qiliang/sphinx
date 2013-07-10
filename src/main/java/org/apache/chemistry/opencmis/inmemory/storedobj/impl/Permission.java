@@ -20,8 +20,10 @@ package org.apache.chemistry.opencmis.inmemory.storedobj.impl;
 
 import org.apache.chemistry.opencmis.commons.BasicPermissions;
 
+import com.mongodb.BasicDBObject;
 
-public enum Permission {
+
+public enum Permission  {
     NONE("none"),
     READ("read"),
     WRITE("write"),

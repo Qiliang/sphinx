@@ -129,7 +129,7 @@ public class StoreManagerImpl implements StoreManager {
 
     public void initRepository(String repositoryId) {
         fMapRepositoryToObjectStore.put(repositoryId, new ObjectStoreImpl(repositoryId));
-        fMapRepositoryToTypeManager.put(repositoryId, new TypeManagerImpl());
+        fMapRepositoryToTypeManager.put(repositoryId, new TypeManagerImpl(repositoryId));
     }
 
     public void createAndInitRepository(String repositoryId, String typeCreatorClassName) {
@@ -139,7 +139,7 @@ public class StoreManagerImpl implements StoreManager {
         }
 
         fMapRepositoryToObjectStore.put(repositoryId, new ObjectStoreImpl(repositoryId));
-        fMapRepositoryToTypeManager.put(repositoryId, new TypeManagerImpl());
+        fMapRepositoryToTypeManager.put(repositoryId, new TypeManagerImpl(repositoryId));
 
         // initialize the type system:
         initTypeSystem(repositoryId, typeCreatorClassName);

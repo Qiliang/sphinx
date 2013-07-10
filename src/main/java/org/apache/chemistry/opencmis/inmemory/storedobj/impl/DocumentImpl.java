@@ -38,6 +38,7 @@ import org.apache.chemistry.opencmis.inmemory.ConfigurationSettings;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
 import org.apache.chemistry.opencmis.inmemory.server.InMemoryServiceContext;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Document;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ public class DocumentImpl extends AbstractMultiFilingImpl implements Document {
 
     public static final int THUMBNAIL_SIZE = 100;
 
-    DocumentImpl(ObjectStoreImpl objStore) { // visibility should be package
+    DocumentImpl(ObjectStore objStore) { // visibility should be package
         super(objStore);
     }
 

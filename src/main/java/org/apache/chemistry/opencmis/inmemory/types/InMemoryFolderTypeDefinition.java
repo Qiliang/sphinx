@@ -20,7 +20,9 @@
 package org.apache.chemistry.opencmis.inmemory.types;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
@@ -28,6 +30,9 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentExcep
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.FolderTypeDefinitionImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.TypeMutabilityImpl;
 import org.apache.chemistry.opencmis.inmemory.NameValidator;
+import org.bson.BSONObject;
+
+import com.mongodb.DBObject;
 
 public class InMemoryFolderTypeDefinition extends FolderTypeDefinitionImpl {
 
@@ -109,4 +114,5 @@ public class InMemoryFolderTypeDefinition extends FolderTypeDefinitionImpl {
         Map<String, PropertyDefinition<?>> props = new HashMap<String, PropertyDefinition<?>>();
         setPropertyDefinitions(props); // set initial empty set of properties
     }
+
 }

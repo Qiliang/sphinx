@@ -56,7 +56,7 @@ public class InMemoryMultiFilingServiceImpl extends InMemoryAbstractServiceImpl 
 
         Folder newParent = (Folder) folder;
         MultiFiling obj = (MultiFiling) so;
-        obj.addParent(newParent);
+        obj.addParent(newParent.getId());
 
         if (context.isObjectInfoRequired()) {
             ObjectInfoImpl objectInfo = new ObjectInfoImpl();
@@ -81,7 +81,7 @@ public class InMemoryMultiFilingServiceImpl extends InMemoryAbstractServiceImpl 
         checkObjects(so, folder);
         Folder parent = (Folder) folder;
         MultiFiling obj = (MultiFiling) so;
-        obj.removeParent(parent);
+        obj.removeParent(parent.getId());
 
         // To be able to provide all Atom links in the response we need
         // additional information:

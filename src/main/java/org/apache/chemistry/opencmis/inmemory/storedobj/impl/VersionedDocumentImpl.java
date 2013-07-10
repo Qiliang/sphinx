@@ -32,6 +32,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentExcep
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
+import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
 
 public class VersionedDocumentImpl extends AbstractMultiFilingImpl implements VersionedDocument {
@@ -40,7 +41,7 @@ public class VersionedDocumentImpl extends AbstractMultiFilingImpl implements Ve
     private String fCheckedOutUser;
     private final List<DocumentVersion> fVersions;
 
-    public VersionedDocumentImpl(ObjectStoreImpl objStore) {
+    public VersionedDocumentImpl(ObjectStore objStore) {
         super(objStore);
         fVersions = new ArrayList<DocumentVersion>();
         fIsCheckedOut = false;
@@ -52,7 +53,7 @@ public class VersionedDocumentImpl extends AbstractMultiFilingImpl implements Ve
             throw new CmisConstraintException("Cannot add a version to document, document is checked out.");
         }
 
-        DocumentVersionImpl ver = new DocumentVersionImpl(fRepositoryId, this, content, verState, fObjStore);
+        DocumentVersionImpl ver = new DocumentVersionImpl(getRepositoryId(), this, content, verState, fObjStore);
         ver.setSystemBasePropertiesWhenCreatedDirect(getName(), getTypeId(), user); // copy
         // name and type id from version series.
         ver.persist();

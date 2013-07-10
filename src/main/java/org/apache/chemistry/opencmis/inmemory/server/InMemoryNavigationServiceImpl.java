@@ -416,7 +416,7 @@ public class InMemoryNavigationServiceImpl extends InMemoryAbstractServiceImpl {
 
         ObjectDataImpl parent = new ObjectDataImpl();
 
-        Folder parentFolder = sop.getParent();
+        Folder parentFolder = sop.getParentFolder();
 
         if (null == parentFolder) {
             return null;

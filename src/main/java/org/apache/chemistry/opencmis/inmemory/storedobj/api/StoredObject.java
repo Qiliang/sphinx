@@ -30,6 +30,8 @@ import org.apache.chemistry.opencmis.commons.data.RenditionData;
 import org.apache.chemistry.opencmis.commons.enums.RelationshipDirection;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 
+import com.mongodb.DBObject;
+
 /**
  * Stored Object interface is common part that all objects handled by CMIS
  * (Documents, Folders, Relations, Policies, ACLs) share. Objects that implement
@@ -51,7 +53,7 @@ import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
  * @author d058463
  *
  */
-public interface StoredObject {
+public interface StoredObject extends DBObject {
 
     /**
      * Retrieve the id of this object.
