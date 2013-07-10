@@ -307,6 +307,8 @@ public interface ObjectStore {
     
     
     String storeObject(StoredObject so);
+    String storeContentStream(ContentStream cs);
+    ContentStream getContentStream(String contentStreamId);
     
     Acl getAcl(int aclId);
     

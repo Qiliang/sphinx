@@ -18,11 +18,14 @@
  */
 package org.apache.chemistry.opencmis.inmemory.storedobj.impl;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -55,6 +58,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.gridfs.GridFSInputFile;
 
 /**
  * The object store is the central core of the in-memory repository. It is based
@@ -114,6 +120,7 @@ public class ObjectStoreImpl implements ObjectStore {
 
 	private final Lock fLock = new ReentrantLock();
 
+	GridFS fs;
 	MongoMap objects;
 	DBCollection acls;
 	final String fRepositoryId;
@@ -125,7 +132,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		try {
 			MongoClient mongoClient = new MongoClient("localhost");
 			DB db = mongoClient.getDB(fRepositoryId);
-
+			fs = new GridFS(db);
 			objects = new MongoMap(db.getCollection("objects"), this);
 			objects.clear();
 			acls = db.getCollection("acls");
@@ -186,9 +193,9 @@ public class ObjectStoreImpl implements ObjectStore {
 	public FolderImpl getFolderById(String objectId) {
 		StoredObject so = objects.get(objectId);
 		if (so instanceof FolderImpl) {
-			return (FolderImpl)so;
+			return (FolderImpl) so;
 		}
-		
+
 		return null;
 	}
 
@@ -730,6 +737,35 @@ public class ObjectStoreImpl implements ObjectStore {
 				return true;
 		}
 		return false;
+	}
+
+	public String storeContentStream(ContentStream cs) {
+		String id = UUID.randomUUID().toString();
+		GridFSInputFile file = fs.createFile(cs.getStream());
+		file.setId(id);
+//		file.setChunkSize(cs.getLength());
+		file.setContentType(cs.getMimeType());
+		file.setFilename(cs.getFileName());
+		file.save();
+		return id;
+	}
+
+	public ContentStream getContentStream(String contentStreamId)  {
+
+		GridFSDBFile file = fs.findOne(new BasicDBObject("_id", contentStreamId));
+		ContentStreamDataImpl cs=new ContentStreamDataImpl(file.getLength());
+		try {
+			cs.setContent(file.getInputStream());
+			cs.setFileName(file.getFilename());
+			GregorianCalendar calendar=new GregorianCalendar();
+			calendar.setTime(file.getUploadDate());
+			cs.setLastModified(calendar);
+			cs.setMimeType(file.getContentType());
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to get content from InputStream", e);
+		}
+		
+		return cs;
 	}
 
 }

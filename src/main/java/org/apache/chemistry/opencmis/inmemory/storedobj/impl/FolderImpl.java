@@ -125,6 +125,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 
     public ChildrenResult getChildren(int maxItems, int skipCount, String user) {
         List<StoredObject> result = new ArrayList<StoredObject>();
+        
         for (String id : fObjStore.getIds()) {
             StoredObject obj = fObjStore.getObjectById(id);
             if (obj instanceof Filing) {
