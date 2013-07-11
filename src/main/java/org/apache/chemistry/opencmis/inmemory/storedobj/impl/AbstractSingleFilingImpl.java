@@ -18,6 +18,7 @@
  */
 package org.apache.chemistry.opencmis.inmemory.storedobj.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +30,8 @@ import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.SingleFiling;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
+
+import com.mongodb.BasicDBList;
 
 /**
  * AbstractPathImpl is the common superclass of all objects hold in the
@@ -64,7 +67,8 @@ public abstract class AbstractSingleFilingImpl extends StoredObjectImpl implemen
 	}
 
 	public String getParentId() {
-		return getString("parentId");
+		BasicDBList list = (BasicDBList) get("parentIds");
+		return (String) list.get(0);
 	}
 
 	public boolean hasParent() {
@@ -85,7 +89,9 @@ public abstract class AbstractSingleFilingImpl extends StoredObjectImpl implemen
 	}
 
 	public void setParentId(String parentId) {
-		put("parentId", parentId);
+		List<String> parentIds = new ArrayList<String>();
+		parentIds.add(parentId);
+		put("parentIds", parentIds);
 	}
 
 	public Folder getParentFolder() {

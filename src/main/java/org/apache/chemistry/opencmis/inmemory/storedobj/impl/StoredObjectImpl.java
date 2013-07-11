@@ -47,6 +47,14 @@ import org.apache.chemistry.opencmis.commons.data.RenditionData;
 import org.apache.chemistry.opencmis.commons.enums.CmisVersion;
 import org.apache.chemistry.opencmis.commons.enums.RelationshipDirection;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyData;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyBooleanImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDateTimeImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyDecimalImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyHtmlImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIdImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIntegerImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyStringImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyUriImpl;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.inmemory.DataObjectCreator;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
@@ -507,7 +515,7 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 	}
 
 	public void setAclId(int aclId) {
-		put("aclId",aclId);
+		put("aclId", aclId);
 	}
 
 	public List<StoredObject> getObjectRelationships(RelationshipDirection relationshipDirection, String user) {
@@ -583,9 +591,51 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		return Collections.unmodifiableList(toStringList(basicDBList));
 	}
 
+	private AbstractPropertyData newPropertyData(String className) {
+		if ("boolean".equals(className))
+			return new PropertyBooleanImpl();
+		else if ("datetime".equals(className))
+			return new PropertyDateTimeImpl();
+		else if ("decimal".equals(className))
+			return new PropertyDecimalImpl();
+		else if ("html".equals(className))
+			return new PropertyHtmlImpl();
+		else if ("id".equals(className))
+			return new PropertyIdImpl();
+		else if ("int".equals(className))
+			return new PropertyIntegerImpl();
+		else if ("string".equals(className))
+			return new PropertyStringImpl();
+		else if ("uri".equals(className))
+			return new PropertyUriImpl();
+		return null;
+	}
+
+	private String getAlias(PropertyData propertyData) {
+		if (propertyData instanceof PropertyBooleanImpl) {
+			return "boolean";
+		} else if (propertyData instanceof PropertyDateTimeImpl) {
+			return "datetime";
+		} else if (propertyData instanceof PropertyDecimalImpl) {
+			return "decimal";
+		} else if (propertyData instanceof PropertyHtmlImpl) {
+			return "html";
+		} else if (propertyData instanceof PropertyIdImpl) {
+			return "id";
+		} else if (propertyData instanceof PropertyIntegerImpl) {
+			return "int";
+		} else if (propertyData instanceof PropertyStringImpl) {
+			return "string";
+		} else if (propertyData instanceof PropertyUriImpl) {
+			return "uri";
+		} else {
+			return null;
+		}
+	}
+
 	private PropertyData from(BasicDBObject dbObject) {
 		try {
-			AbstractPropertyData propertyData = (AbstractPropertyData) Class.forName(dbObject.getString("className")).newInstance();
+			AbstractPropertyData propertyData = newPropertyData(dbObject.getString("className"));
 			propertyData.setId(dbObject.getString("id"));
 			propertyData.setLocalName(dbObject.getString("localName"));
 			propertyData.setQueryName(dbObject.getString("queryName"));
@@ -611,7 +661,7 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		dbObject.put("queryName", propertyData.getQueryName());
 		dbObject.put("displayName", propertyData.getDisplayName());
 		dbObject.put("values", propertyData.getValues());
-		dbObject.put("className", propertyData.getClass().getName());
+		dbObject.put("className", getAlias(propertyData));
 		return dbObject;
 	}
 

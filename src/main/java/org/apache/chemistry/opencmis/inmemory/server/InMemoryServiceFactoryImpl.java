@@ -388,12 +388,20 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
         String contentKindStr = parameters.get(ConfigConstants.CONTENT_KIND);
         boolean doFillRepository = doFillRepositoryStr == null ? false : Boolean.parseBoolean(doFillRepositoryStr);
 
+        InMemoryService svc = new InMemoryService(inMemoryServiceParameters, storeManager);
+        DummyCallContext ctx = new DummyCallContext();
+        // create thread local storage and attach call context
+        CmisService     cmisService=      getService(ctx);
+        RepositoryInfo rep = svc.getRepositoryInfo(repositoryId, null);
+        String rootFolderId = rep.getRootFolderId();
+        
+        SystemObjectCreator soc=new SystemObjectCreator(rep.getId(), cmisService);
+        soc.createObjects();
         if (doFillRepository) {
 
             // create an initial temporary service instance to fill the
             // repository
 
-            InMemoryService svc = new InMemoryService(inMemoryServiceParameters, storeManager);
 
             BindingsObjectFactory objectFactory = new BindingsObjectFactoryImpl();
 
@@ -479,15 +487,13 @@ public class InMemoryServiceFactoryImpl extends AbstractServiceFactory {
             // Simulate a runtime context with configuration parameters
             // Attach the CallContext to a thread local context that can be
             // accessed from everywhere
-            DummyCallContext ctx = new DummyCallContext();
+            //DummyCallContext ctx = new DummyCallContext();
             // create thread local storage and attach call context
-            CmisService     cmisService=      getService(ctx);
+            //CmisService     cmisService=      getService(ctx);
 
             // Build the tree
-            RepositoryInfo rep = svc.getRepositoryInfo(repositoryId, null);
-            String rootFolderId = rep.getRootFolderId();
-            SystemObjectCreator soc=new SystemObjectCreator(rep.getId(), cmisService);
-            soc.createObjects();
+           
+          
             try {
                 gen.createFolderHierachy(levels, childrenPerLevel, rootFolderId);
                 // Dump the tree

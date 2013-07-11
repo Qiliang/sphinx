@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -134,7 +136,6 @@ public class ObjectStoreImpl implements ObjectStore {
 			DB db = mongoClient.getDB(fRepositoryId);
 			fs = new GridFS(db);
 			objects = new MongoMap(db.getCollection("objects"), this);
-			objects.clear();
 			acls = db.getCollection("acls");
 			acls.setObjectClass(InMemoryAcl.class);
 		} catch (UnknownHostException e) {
@@ -153,37 +154,47 @@ public class ObjectStoreImpl implements ObjectStore {
 	}
 
 	public void lock() {
-		fLock.lock();
+		// fLock.lock();
 	}
 
 	public void unlock() {
-		fLock.unlock();
+		// fLock.unlock();
 	}
 
 	public Folder getRootFolder() {
 		return fRootFolder;
 	}
 
+	private String[] getPathSegments(String path) {
+		String[] pathSegments = path.split(Folder.PATH_SEPARATOR);
+		if (pathSegments.length == 0)
+			return pathSegments;
+		return (String[]) org.apache.commons.lang.ArrayUtils.remove(pathSegments, 0);
+	}
+
+	private StoredObject getObjectByName(String name, String parentId, String user) {
+		List<Integer> aclIds = this.getAllAclsForUser(user, Permission.READ);
+		BasicDBObject where = new BasicDBObject();
+		where.put("$or", new Object[] {
+				new BasicDBObject("parentIds", new BasicDBObject("$in", new String[] { parentId })),
+				new BasicDBObject("parentId", parentId)
+		});
+		where.put("name", name);
+		where.put("aclId", new BasicDBObject("$in", aclIds));
+		DBObject dbObject = objects.dbCollection.findOne(where);
+		return objects.convert(dbObject);
+	}
+
 	public StoredObject getObjectByPath(String path, String user) {
-		for (StoredObject so : objects.values()) {
-			if (so instanceof SingleFiling) {
-				String soPath = ((SingleFiling) so).getPath();
-				if (soPath.equals(path)) {
-					return so;
-				}
-			} else if (so instanceof MultiFiling) {
-				MultiFiling mfo = (MultiFiling) so;
-				List<Folder> parents = mfo.getParents(user);
-				for (Folder parent : parents) {
-					String parentPath = parent.getPath();
-					String mfPath = parentPath.equals(Folder.PATH_SEPARATOR) ? parentPath + mfo.getPathSegment() : parentPath + Folder.PATH_SEPARATOR + mfo.getPathSegment();
-					if (mfPath.equals(path)) {
-						return so;
-					}
-				}
-			}
+		String[] pathSegments = getPathSegments(path);
+		StoredObject object = getRootFolder();
+		for (String segment : pathSegments) {
+			object = getObjectByName(segment, object.getId(), user);
+			if (object == null)
+				return null;
 		}
-		return null;
+
+		return object;
 	}
 
 	public StoredObject getObjectById(String objectId) {
@@ -240,6 +251,26 @@ public class ObjectStoreImpl implements ObjectStore {
 		objects.remove(vers.getId());
 	}
 
+	private String getAlias(StoredObject so) {
+		if (so instanceof RelationshipImpl) {
+			return "Relationship";
+		} else if (so instanceof PolicyImpl) {
+			return "Policy";
+		} else if (so instanceof DocumentVersionImpl) {
+			return "DocumentVersion";
+		} else if (so instanceof DocumentImpl) {
+			return "Document";
+		} else if (so instanceof ItemImpl) {
+			return "Item";
+		} else if (so instanceof VersionedDocumentImpl) {
+			return "VersionedDocument";
+		} else if (so instanceof FolderImpl) {
+			return "Folder";
+		} else {
+			return null;
+		}
+	}
+
 	public String storeObject(StoredObject so) {
 		String id = so.getId();
 		// check if update or create
@@ -248,7 +279,8 @@ public class ObjectStoreImpl implements ObjectStore {
 			so.put("_id", id);
 		}
 
-		so.put("className", so.getClass().getName());
+		so.put("className", getAlias(so));
+
 		objects.save(so);
 
 		return id;
@@ -393,15 +425,15 @@ public class ObjectStoreImpl implements ObjectStore {
 
 	public List<StoredObject> getCheckedOutDocuments(String orderBy, String user, IncludeRelationships includeRelationships) {
 		List<StoredObject> res = new ArrayList<StoredObject>();
-
-		for (StoredObject so : objects.values()) {
-			if (so instanceof VersionedDocument) {
-				VersionedDocument verDoc = (VersionedDocument) so;
-				if (verDoc.isCheckedOut() && hasReadAccess(user, verDoc)) {
-					res.add(verDoc.getPwc());
-				}
-			}
-		}
+		// 没有实现
+		// for (StoredObject so : objects.values()) {
+		// if (so instanceof VersionedDocument) {
+		// VersionedDocument verDoc = (VersionedDocument) so;
+		// if (verDoc.isCheckedOut() && hasReadAccess(user, verDoc)) {
+		// res.add(verDoc.getPwc());
+		// }
+		// }
+		// }
 
 		return res;
 	}
@@ -426,22 +458,26 @@ public class ObjectStoreImpl implements ObjectStore {
 	public List<StoredObject> getRelationships(String objectId, List<String> typeIds, RelationshipDirection direction) {
 
 		List<StoredObject> res = new ArrayList<StoredObject>();
-
-		if (typeIds != null && typeIds.size() > 0) {
-			for (String typeId : typeIds) {
-				for (StoredObject so : objects.values()) {
-					if (so instanceof Relationship && so.getTypeId().equals(typeId)) {
-						Relationship ro = (Relationship) so;
-						if (ro.getSourceObjectId().equals(objectId) && (RelationshipDirection.EITHER == direction || RelationshipDirection.SOURCE == direction)) {
-							res.add(so);
-						} else if (ro.getTargetObjectId().equals(objectId) && (RelationshipDirection.EITHER == direction || RelationshipDirection.TARGET == direction)) {
-							res.add(so);
-						}
-					}
-				}
-			}
-		} else
-			res = getAllRelationships(objectId, direction);
+		// 没有实现
+		// if (typeIds != null && typeIds.size() > 0) {
+		// for (String typeId : typeIds) {
+		// for (StoredObject so : objects.values()) {
+		// if (so instanceof Relationship && so.getTypeId().equals(typeId)) {
+		// Relationship ro = (Relationship) so;
+		// if (ro.getSourceObjectId().equals(objectId) &&
+		// (RelationshipDirection.EITHER == direction ||
+		// RelationshipDirection.SOURCE == direction)) {
+		// res.add(so);
+		// } else if (ro.getTargetObjectId().equals(objectId) &&
+		// (RelationshipDirection.EITHER == direction ||
+		// RelationshipDirection.TARGET == direction)) {
+		// res.add(so);
+		// }
+		// }
+		// }
+		// }
+		// } else
+		// res = getAllRelationships(objectId, direction);
 		return res;
 	}
 
@@ -715,17 +751,21 @@ public class ObjectStoreImpl implements ObjectStore {
 	private List<StoredObject> getAllRelationships(String objectId, RelationshipDirection direction) {
 
 		List<StoredObject> res = new ArrayList<StoredObject>();
-
-		for (StoredObject so : objects.values()) {
-			if (so instanceof Relationship) {
-				Relationship ro = (Relationship) so;
-				if (ro.getSourceObjectId().equals(objectId) && (RelationshipDirection.EITHER == direction || RelationshipDirection.SOURCE == direction)) {
-					res.add(so);
-				} else if (ro.getTargetObjectId().equals(objectId) && (RelationshipDirection.EITHER == direction || RelationshipDirection.TARGET == direction)) {
-					res.add(so);
-				}
-			}
-		}
+		// 没有实现
+		// for (StoredObject so : objects.values()) {
+		// if (so instanceof Relationship) {
+		// Relationship ro = (Relationship) so;
+		// if (ro.getSourceObjectId().equals(objectId) &&
+		// (RelationshipDirection.EITHER == direction ||
+		// RelationshipDirection.SOURCE == direction)) {
+		// res.add(so);
+		// } else if (ro.getTargetObjectId().equals(objectId) &&
+		// (RelationshipDirection.EITHER == direction ||
+		// RelationshipDirection.TARGET == direction)) {
+		// res.add(so);
+		// }
+		// }
+		// }
 		return res;
 	}
 
@@ -743,29 +783,50 @@ public class ObjectStoreImpl implements ObjectStore {
 		String id = UUID.randomUUID().toString();
 		GridFSInputFile file = fs.createFile(cs.getStream());
 		file.setId(id);
-//		file.setChunkSize(cs.getLength());
+		// file.setChunkSize(cs.getLength());
 		file.setContentType(cs.getMimeType());
 		file.setFilename(cs.getFileName());
 		file.save();
 		return id;
 	}
 
-	public ContentStream getContentStream(String contentStreamId)  {
+	public ContentStream getContentStream(String contentStreamId) {
 
 		GridFSDBFile file = fs.findOne(new BasicDBObject("_id", contentStreamId));
-		ContentStreamDataImpl cs=new ContentStreamDataImpl(file.getLength());
+		ContentStreamDataImpl cs = new ContentStreamDataImpl(file.getLength());
 		try {
 			cs.setContent(file.getInputStream());
 			cs.setFileName(file.getFilename());
-			GregorianCalendar calendar=new GregorianCalendar();
+			GregorianCalendar calendar = new GregorianCalendar();
 			calendar.setTime(file.getUploadDate());
 			cs.setLastModified(calendar);
 			cs.setMimeType(file.getContentType());
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to get content from InputStream", e);
 		}
-		
+
 		return cs;
+	}
+
+	public List<StoredObject> find(DBObject where, DBObject orderBy, int maxItems, int skipCount) {
+
+		if (maxItems < 0)
+			maxItems = Integer.MAX_VALUE;
+		if (skipCount < 0) {
+			skipCount = 0;
+		}
+		if (orderBy == null)
+			orderBy = new BasicDBObject("_id", 1);
+		DBCursor dbCursor = objects.dbCollection.find(where).sort(orderBy).skip(skipCount).limit(maxItems);
+		return objects.from(dbCursor);
+	}
+
+	public boolean has(DBObject where) {
+		return null != objects.dbCollection.findOne(where);
+	}
+
+	public int count(DBObject where) {
+		return objects.dbCollection.find(where).count();
 	}
 
 }
