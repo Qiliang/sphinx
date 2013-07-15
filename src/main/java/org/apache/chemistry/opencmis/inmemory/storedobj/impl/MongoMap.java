@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
 
@@ -43,7 +44,7 @@ public class MongoMap {
 	public StoredObject get(String id) {
 		try {
 			DBObject dbObject = dbCollection.findOne(new BasicDBObject("_id", id));
-			StoredObject so =  newInstance((String) dbObject.get("className"));
+			StoredObject so =  newInstance((String) dbObject.get("cmis:baseTypeId"));
 			if(so==null){
 				System.out.println(so);
 			}
@@ -69,31 +70,11 @@ public class MongoMap {
 		return ids;
 	}
 
-//	public Set<StoredObject> values() {
-//		HashSet<StoredObject> objects = new LinkedHashSet<StoredObject>();
-//		BasicDBObject keys = new BasicDBObject();
-//		DBCursor dbCursor = dbCollection.find(new BasicDBObject(), keys);
-//		try {
-//			for (DBObject dbObject : dbCursor) {
-//				StoredObject so = newInstance((String) dbObject.get("className"));
-//				so.putAll(dbObject);
-//				objects.add(so);
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			return objects;
-//		} finally {
-//			dbCursor.close();
-//		}
-//
-//		return objects;
-//
-//	}
 	
 	public StoredObject convert(DBObject dbObject){
 		if(dbObject==null)
 			return null;
-		StoredObject so = newInstance((String) dbObject.get("className"));
+		StoredObject so = newInstance((String) dbObject.get("cmis:basicTypeId"));
 		so.putAll(dbObject);
 		return so;
 	}
@@ -102,7 +83,10 @@ public class MongoMap {
 		List<StoredObject> objects = new ArrayList<StoredObject>();
 		try {
 			for (DBObject dbObject : dbCursor) {
-				StoredObject so = newInstance((String) dbObject.get("className"));
+				if(dbObject==null){
+					System.out.println();
+				}
+				StoredObject so = newInstance((String) dbObject.get("cmis:baseTypeId"));
 				so.putAll(dbObject);
 				objects.add(so);
 			}
@@ -126,20 +110,21 @@ public class MongoMap {
 	}
 
 	private StoredObject newInstance(String className) {
-		if ("Relationship".equals(className)) {
+		
+		if (BaseTypeId.CMIS_RELATIONSHIP.value().equals(className)) {
 			return new RelationshipImpl(objStore);
-		} else if ("Policy".equals(className)) {
+		} else if (BaseTypeId.CMIS_POLICY.value().equals(className)) {
 			return new PolicyImpl(objStore);
 		}else if ("DocumentVersion".equals(className)) {
 			return null;
 			//return new DocumentVersionImpl(objStore);
-		}else if ("Document".equals(className)) {
+		}else if (BaseTypeId.CMIS_DOCUMENT.value().equals(className)) {
 			return new DocumentImpl(objStore);
-		}else if ("Item".equals(className)) {
+		}else if (BaseTypeId.CMIS_ITEM.value().equals(className)) {
 			return new ItemImpl(objStore);
 		}else if ("VersionedDocument".equals(className)) {
 			return new VersionedDocumentImpl(objStore);
-		}else if ("Folder".equals(className)) {
+		}else if (BaseTypeId.CMIS_FOLDER.value().equals(className)) {
 			return new FolderImpl(objStore);
 		}
 		return null;

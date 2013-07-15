@@ -356,5 +356,10 @@ public interface StoredObject extends DBObject {
      *      id of policy to remove
      */
     public void removePolicy(String policyId);
+    
+    
+    public String getBaseTypeId();
+	
+	public void setBaseTypeId(String baseTypeId);
 
 }

@@ -129,7 +129,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 
 		TypeDefinitionContainerImpl container = new TypeDefinitionContainerImpl(typeDefinition);
 		for (TypeDefinition td : typeCache.values()) {
-			if (td.getParentTypeId() == typeDefinition.getId()) {
+			if (typeDefinition.getId().equals(td.getParentTypeId())) {
 				container.getChildren().add(getTypeDefinitionContainer(td));
 			}
 		}

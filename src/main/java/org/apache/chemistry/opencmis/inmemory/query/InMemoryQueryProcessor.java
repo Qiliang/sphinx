@@ -38,6 +38,7 @@ import org.apache.chemistry.opencmis.commons.data.ObjectList;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionContainer;
 import org.apache.chemistry.opencmis.commons.enums.Cardinality;
 import org.apache.chemistry.opencmis.commons.enums.IncludeRelationships;
 import org.apache.chemistry.opencmis.commons.enums.PropertyType;
@@ -68,6 +69,9 @@ import org.bson.BSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 /**
  * A processor for a CMIS query for the In-Memory server. During tree traversal
  * conditions are checked against the data contained in the central hash map
@@ -79,7 +83,7 @@ public class InMemoryQueryProcessor {
 
 	private static final Logger LOG = LoggerFactory.getLogger(InMemoryQueryProcessor.class);
 
-	private List<StoredObject> matches = new ArrayList<StoredObject>();
+	// private List<StoredObject> matches = new ArrayList<StoredObject>();
 	private QueryObject queryObj;
 	private Tree whereTree;
 	private ObjectStoreImpl objStore;
@@ -99,13 +103,16 @@ public class InMemoryQueryProcessor {
 		processQueryAndCatchExc(statement, tm); // calls query processor
 
 		// iterate over all the objects and check for each if the query matches
-		for (String objectId : ((ObjectStoreImpl) objectStore).getIds()) {
-			StoredObject so = objectStore.getObjectById(objectId);
-			match(so, user, searchAllVersions == null ? true : searchAllVersions.booleanValue());
-		}
+		// for (String objectId : ((ObjectStoreImpl) objectStore).getIds()) {
+		// StoredObject so = objectStore.getObjectById(objectId);
+		// match(so, user, searchAllVersions == null ? true :
+		// searchAllVersions.booleanValue());
+		// }
 
-		ObjectList objList = buildResultList(tm, user, includeAllowableActions, includeRelationships, renditionFilter,
-				maxItems, skipCount);
+		WhereWalker whereWalker = new WhereWalker();
+		DBObject where = whereWalker.walk(whereTree);
+
+		ObjectList objList = buildResultList(where, tm, user, includeAllowableActions, includeRelationships, renditionFilter, maxItems, skipCount);
 		LOG.debug("Query result, number of matching objects: " + objList.getNumItems());
 		return objList;
 	}
@@ -120,34 +127,28 @@ public class InMemoryQueryProcessor {
 		doAdditionalChecks(walker);
 	}
 
-	public ObjectList buildResultList(TypeManager tm, String user, Boolean includeAllowableActions,
+	private DBObject getOrderBy() {
+		List<SortSpec> sorts = queryObj.getOrderBys();
+		if (sorts.isEmpty())
+			return null;
+
+		String name = sorts.get(0).getSelector().getName();
+		return new BasicDBObject(name, sorts.get(0).isAscending() ? "1" : "-1");
+	}
+
+	public ObjectList buildResultList(DBObject where, TypeManager tm, String user, Boolean includeAllowableActions,
 			IncludeRelationships includeRelationships, String renditionFilter, BigInteger maxItems, BigInteger skipCount) {
 
-		sortMatches();
-
 		ObjectListImpl res = new ObjectListImpl();
+
+		BasicDBObject condition = new BasicDBObject();
+		condition.put("$and", new DBObject[] { from(tm), where });
+		System.out.println(condition);
+		List<StoredObject> matches = objStore.find(condition, getOrderBy(), maxItems == null ? 0 : maxItems.intValue(), skipCount == null ? 0 : skipCount.intValue());
+		int count = objStore.count(condition);
 		res.setNumItems(BigInteger.valueOf(matches.size()));
-		int start = 0;
-		if (skipCount != null) {
-			start = (int) skipCount.longValue();
-		}
-		if (start < 0) {
-			start = 0;
-		}
-		if (start > matches.size()) {
-			start = matches.size();
-		}
-		int stop = 0;
-		if (maxItems != null) {
-			stop = start + (int) maxItems.longValue();
-		}
-		if (stop <= 0 || stop > matches.size()) {
-			stop = matches.size();
-		}
-		res.setHasMoreItems(stop < matches.size());
-		if (start > 0 || stop > 0) {
-			matches = matches.subList(start, stop);
-		}
+		res.setHasMoreItems(true);
+		res.setNumItems(BigInteger.valueOf(count));
 
 		List<ObjectData> objDataList = new ArrayList<ObjectData>();
 		Map<String, String> props = queryObj.getRequestedPropertiesByAlias();
@@ -157,12 +158,31 @@ public class InMemoryQueryProcessor {
 			String queryName = queryObj.getTypes().values().iterator().next();
 			TypeDefinition td = queryObj.getTypeDefinitionFromQueryName(queryName);
 
-			ObjectData od = PropertyCreationHelper.getObjectDataQueryResult(tm, td, so, user, props, funcs,
-					secondaryTypeIds, includeAllowableActions, includeRelationships, renditionFilter);
+			ObjectData od = PropertyCreationHelper.getObjectDataQueryResult(tm, td, so, user, props, funcs, secondaryTypeIds, includeAllowableActions, includeRelationships, renditionFilter);
 			objDataList.add(od);
 		}
 		res.setObjects(objDataList);
 		return res;
+	}
+
+	private List<String> subTypes(TypeDefinitionContainer definitionContainer) {
+		List<String> types = new ArrayList<String>();
+		types.add(definitionContainer.getTypeDefinition().getId());
+		for (TypeDefinitionContainer subContainer : definitionContainer.getChildren()) {
+			types.addAll(subTypes(subContainer));
+		}
+
+		return types;
+	}
+
+	private DBObject from(TypeManager tm) {
+		String queryName = queryObj.getTypes().values().iterator().next();
+		TypeDefinition td = queryObj.getTypeDefinitionFromQueryName(queryName);
+		TypeDefinitionContainer definitionContainer = tm.getTypeById(td.getId());
+		BasicDBObject from = new BasicDBObject();
+		from.put("cmis:objectTypeId", new BasicDBObject("$in",subTypes(definitionContainer)));
+
+		return from;
 	}
 
 	private boolean typeMatches(TypeDefinition td, StoredObject so) {
@@ -185,58 +205,56 @@ public class InMemoryQueryProcessor {
 		return false;
 	}
 
-	private void sortMatches() {
-		final List<SortSpec> orderBy = queryObj.getOrderBys();
-		if (orderBy.size() > 1) {
-			LOG.warn("ORDER BY has more than one sort criterium, all but the first are ignored.");
-		}
-		class ResultComparator implements Comparator<StoredObject> {
-
-			@SuppressWarnings("unchecked")
-			public int compare(StoredObject so1, StoredObject so2) {
-				SortSpec s = orderBy.get(0);
-				CmisSelector sel = s.getSelector();
-				int result;
-
-				if (queryObj.isPredfinedQueryName(sel.getName())) {
-					// must be SEARCH_SCORE which is currently ignored
-					result = 0;
-				} else if (sel instanceof ColumnReference) {
-					String propId = ((ColumnReference) sel).getPropertyId();
-					PropertyDefinition<?> pd = ((ColumnReference) sel).getPropertyDefinition();
-
-					Object propVal1 = PropertyUtil.getProperty(so1, propId, pd);
-					Object propVal2 = PropertyUtil.getProperty(so2, propId, pd);
-
-					if (propVal1 == null && propVal2 == null) {
-						result = 0;
-					} else if (propVal1 == null) {
-						result = -1;
-					} else if (propVal2 == null) {
-						result = 1;
-					} else {
-						result = ((Comparable<Object>) propVal1).compareTo(propVal2);
-					}
-				} else {
-					// String funcName = ((FunctionReference) sel).getName();
-					// evaluate function here, currently ignore
-					result = 0;
-				}
-				if (!s.isAscending()) {
-					result = -result;
-				}
-				return result;
-			}
-		}
-
-		if (orderBy.size() > 0) {
-			Collections.sort(matches, new ResultComparator());
-		}
-
-	}
-
-	private void match() {
-	}
+	// private void sortMatches() {
+	// final List<SortSpec> orderBy = queryObj.getOrderBys();
+	// if (orderBy.size() > 1) {
+	// LOG.warn("ORDER BY has more than one sort criterium, all but the first are ignored.");
+	// }
+	// class ResultComparator implements Comparator<StoredObject> {
+	//
+	// @SuppressWarnings("unchecked")
+	// public int compare(StoredObject so1, StoredObject so2) {
+	// SortSpec s = orderBy.get(0);
+	// CmisSelector sel = s.getSelector();
+	// int result;
+	//
+	// if (queryObj.isPredfinedQueryName(sel.getName())) {
+	// // must be SEARCH_SCORE which is currently ignored
+	// result = 0;
+	// } else if (sel instanceof ColumnReference) {
+	// String propId = ((ColumnReference) sel).getPropertyId();
+	// PropertyDefinition<?> pd = ((ColumnReference)
+	// sel).getPropertyDefinition();
+	//
+	// Object propVal1 = PropertyUtil.getProperty(so1, propId, pd);
+	// Object propVal2 = PropertyUtil.getProperty(so2, propId, pd);
+	//
+	// if (propVal1 == null && propVal2 == null) {
+	// result = 0;
+	// } else if (propVal1 == null) {
+	// result = -1;
+	// } else if (propVal2 == null) {
+	// result = 1;
+	// } else {
+	// result = ((Comparable<Object>) propVal1).compareTo(propVal2);
+	// }
+	// } else {
+	// // String funcName = ((FunctionReference) sel).getName();
+	// // evaluate function here, currently ignore
+	// result = 0;
+	// }
+	// if (!s.isAscending()) {
+	// result = -result;
+	// }
+	// return result;
+	// }
+	// }
+	//
+	// if (orderBy.size() > 0) {
+	// Collections.sort(matches, new ResultComparator());
+	// }
+	//
+	// }
 
 	/**
 	 * Check for each object contained in the in-memory repository if it matches
@@ -246,37 +264,39 @@ public class InMemoryQueryProcessor {
 	 * @param so
 	 *            object stored in the in-memory repository
 	 */
-	private void match(StoredObject so, String user, boolean searchAllVersions) {
-		// log.debug("checkMatch() for object: " + so.getId());
-		// first check if type is matching...
-		// as we don't support joins take first type
-		String queryName = queryObj.getTypes().values().iterator().next();
-
-		TypeDefinition td = queryObj.getTypeDefinitionFromQueryName(queryName);
-
-		// we are only interested in versions not in the series
-		boolean skip = so instanceof VersionedDocument;
-
-		boolean typeMatches = typeMatches(td, so);
-		if (!searchAllVersions && so instanceof DocumentVersion
-				&& ((DocumentVersion) so).getParentDocument().getLatestVersion(false) != so) {
-			skip = true;
-		}
-		// ... then check expression...
-		if (typeMatches && !skip) {
-			evalWhereTree(whereTree, user, so);
-		}
-	}
-
-	private void evalWhereTree(Tree node, String user, StoredObject so) {
-		boolean match = true;
-		if (null != node) {
-			match = evalWhereNode(so, user, node);
-		}
-		if (match && objStore.hasReadAccess(user, so)) {
-			matches.add(so); // add to list
-		}
-	}
+	// private void match(StoredObject so, String user, boolean
+	// searchAllVersions) {
+	// // log.debug("checkMatch() for object: " + so.getId());
+	// // first check if type is matching...
+	// // as we don't support joins take first type
+	// String queryName = queryObj.getTypes().values().iterator().next();
+	//
+	// TypeDefinition td = queryObj.getTypeDefinitionFromQueryName(queryName);
+	//
+	// // we are only interested in versions not in the series
+	// boolean skip = so instanceof VersionedDocument;
+	//
+	// boolean typeMatches = typeMatches(td, so);
+	// if (!searchAllVersions && so instanceof DocumentVersion
+	// && ((DocumentVersion) so).getParentDocument().getLatestVersion(false) !=
+	// so) {
+	// skip = true;
+	// }
+	// // ... then check expression...
+	// if (typeMatches && !skip) {
+	// evalWhereTree(whereTree, user, so);
+	// }
+	// }
+	//
+	// private void evalWhereTree(Tree node, String user, StoredObject so) {
+	// boolean match = true;
+	// if (null != node) {
+	// match = evalWhereNode(so, user, node);
+	// }
+	// if (match && objStore.hasReadAccess(user, so)) {
+	// matches.add(so); // add to list
+	// }
+	// }
 
 	/**
 	 * For each object check if it matches and append it to match-list if it
@@ -288,9 +308,9 @@ public class InMemoryQueryProcessor {
 	 * @return true if it matches, false if it not matches
 	 */
 	boolean evalWhereNode(StoredObject so, String user, Tree node) {
-		//WhereWalker whereWalker = new WhereWalker();
-		//BSONObject bsonObject=whereWalker.walk(node);
-		//System.out.println(bsonObject.toString());
+		WhereWalker whereWalker = new WhereWalker();
+		BSONObject bsonObject = whereWalker.walk(node);
+		System.out.println(bsonObject.toString());
 		return new InMemoryWhereClauseWalker(so, user).walkPredicate(node);
 	}
 

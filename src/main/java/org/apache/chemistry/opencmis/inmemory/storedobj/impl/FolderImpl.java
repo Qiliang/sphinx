@@ -140,7 +140,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 		List<Integer> aclIds = fObjStore.getAllAclsForUser(user, Permission.READ);
 		BasicDBObject where = new BasicDBObject();
 		where.put("parentIds", new BasicDBObject("$in", new String[] { this.getId() }));
-		where.put("className", "Folder");
+		where.put("cmis:baseTypeId", BaseTypeId.CMIS_FOLDER.value());
 		where.put("aclId", new BasicDBObject("$in", aclIds));
 		System.out.println(where.toString());
 		List<StoredObject> result = fObjStore.find(where, new BasicDBObject("modifiedAt", -1), maxItems, skipCount);

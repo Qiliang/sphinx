@@ -104,59 +104,67 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 	public String getId() {
 		return super.getString("_id");
 	}
+	
+	public String getBaseTypeId() {
+		return super.getString("cmis:baseTypeId");
+	}
+	
+	public void setBaseTypeId(String baseTypeId) {
+		super.put("cmis:baseTypeId",baseTypeId);
+	}
 
 	public String getName() {
-		return super.getString("name");
+		return super.getString("cmis:name");
 	}
 
 	public void setName(String name) {
-		super.put("name", name);
+		super.put("cmis:name", name);
 	}
 
 	public String getTypeId() {
-		return super.getString("typeId");
+		return super.getString("cmis:objectTypeId");
 	}
 
 	public void setTypeId(String type) {
-		super.put("typeId", type);
+		super.put("cmis:objectTypeId", type);
 	}
 
 	public String getCreatedBy() {
-		return super.getString("createdBy");
+		return super.getString("cmis:createdBy");
 	}
 
 	public void setCreatedBy(String createdBy) {
-		super.put("createdBy", createdBy);
+		super.put("cmis:createdBy", createdBy);
 	}
 
 	public String getModifiedBy() {
-		return super.getString("modifiedBy");
+		return super.getString("cmis:lastModifiedBy");
 	}
 
 	public void setModifiedBy(String modifiedBy) {
-		super.put("modifiedBy", modifiedBy);
+		super.put("cmis:lastModifiedBy", modifiedBy);
 	}
 
 	public GregorianCalendar getCreatedAt() {
-		Date date = super.getDate("createdAt");
+		Date date = super.getDate("cmis:creationDate");
 		Calendar calendar = GregorianCalendar.getInstance();
 		calendar.setTime(date);
 		return (GregorianCalendar) calendar;
 	}
 
 	public void setCreatedAt(GregorianCalendar createdAt) {
-		super.put("createdAt", createdAt.getTime());
+		super.put("cmis:creationDate", createdAt.getTime());
 	}
 
 	public GregorianCalendar getModifiedAt() {
-		Date date = super.getDate("modifiedAt");
+		Date date = super.getDate("cmis:lastModificationDate");
 		Calendar calendar = GregorianCalendar.getInstance();
 		calendar.setTime(date);
 		return (GregorianCalendar) calendar;
 	}
 
 	public void setModifiedAtNow() {
-		super.put("modifiedAt", new Date());
+		super.put("cmis:lastModificationDate", new Date());
 	}
 
 	public void setRepositoryId(String repositoryId) {
@@ -208,16 +216,16 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 
 	// CMIS 1.1:
 	public void setDescription(String descr) {
-		put("description", descr);
+		put("cmis:description", descr);
 	}
 
 	// CMIS 1.1:
 	public String getDescription() {
-		return getString("description");
+		return getString("cmis:description");
 	}
 
 	public List<String> getSecondaryTypeIds() {
-		BasicDBList secondaryTypeIds = (BasicDBList) this.get("secondaryTypeIds");
+		BasicDBList secondaryTypeIds = (BasicDBList) this.get("cmis:secondaryObjectTypeIds");
 
 		return toUnmodifiableList(secondaryTypeIds);
 	}
@@ -228,7 +236,7 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 			basicDBList.add(secondaryTypeId);
 		}
 
-		put("secondaryTypeIds", basicDBList);
+		put("cmis:secondaryObjectTypeIds", basicDBList);
 
 	}
 
@@ -242,8 +250,9 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		String typeId = getTypeId();
 		TypeDefinition typeDefinition = TypeManagerImpl.getTypeDefinition(typeId);
 		Map<String, PropertyData<?>> map = new LinkedHashMap<String, PropertyData<?>>();
-
 		for (PropertyDefinition pd : typeDefinition.getPropertyDefinitions().values()) {
+			if (pd.getId().startsWith("cmis:"))
+				continue;
 			AbstractPropertyData propertyData = newPropertyData(pd.getPropertyType());
 			propertyData.setId(pd.getId());
 			propertyData.setLocalName(pd.getLocalName());
@@ -598,6 +607,8 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 	}
 
 	private List<String> toUnmodifiableList(BasicDBList basicDBList) {
+		if(basicDBList==null)
+			return Collections.unmodifiableList(new ArrayList<String>());
 		return Collections.unmodifiableList(toStringList(basicDBList));
 	}
 
@@ -620,45 +631,6 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		else if (PropertyType.URI.equals(propertyType))
 			return new PropertyUriImpl();
 		return null;
-	}
-
-	private String getAlias(PropertyData propertyData) {
-		if (propertyData instanceof PropertyBooleanImpl) {
-			return "boolean";
-		} else if (propertyData instanceof PropertyDateTimeImpl) {
-			return "datetime";
-		} else if (propertyData instanceof PropertyDecimalImpl) {
-			return "decimal";
-		} else if (propertyData instanceof PropertyHtmlImpl) {
-			return "html";
-		} else if (propertyData instanceof PropertyIdImpl) {
-			return "id";
-		} else if (propertyData instanceof PropertyIntegerImpl) {
-			return "int";
-		} else if (propertyData instanceof PropertyStringImpl) {
-			return "string";
-		} else if (propertyData instanceof PropertyUriImpl) {
-			return "uri";
-		} else {
-			return null;
-		}
-	}
-
-	private PropertyData from(BasicDBObject dbObject, PropertyType propertyType) {
-		try {
-			AbstractPropertyData propertyData = newPropertyData(propertyType);
-			propertyData.setId(dbObject.getString("id"));
-			propertyData.setLocalName(dbObject.getString("localName"));
-			propertyData.setQueryName(dbObject.getString("queryName"));
-			propertyData.setDisplayName(dbObject.getString("displayName"));
-			propertyData.setValues((List) dbObject.get("values"));
-			return propertyData;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-		// PropertyData<T>
 	}
 
 }

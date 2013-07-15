@@ -176,10 +176,7 @@ public class ObjectStoreImpl implements ObjectStore {
 	private StoredObject getObjectByName(String name, String parentId, String user) {
 		List<Integer> aclIds = this.getAllAclsForUser(user, Permission.READ);
 		BasicDBObject where = new BasicDBObject();
-		where.put("$or", new Object[] {
-				new BasicDBObject("parentIds", new BasicDBObject("$in", new String[] { parentId })),
-				new BasicDBObject("parentId", parentId)
-		});
+		where.put("parentIds", new BasicDBObject("$in", new String[] { parentId }));
 		where.put("name", name);
 		where.put("aclId", new BasicDBObject("$in", aclIds));
 		DBObject dbObject = objects.dbCollection.findOne(where);
@@ -252,21 +249,21 @@ public class ObjectStoreImpl implements ObjectStore {
 		objects.remove(vers.getId());
 	}
 
-	private String getAlias(StoredObject so) {
+	private String getBasicTypeId(StoredObject so) {
 		if (so instanceof RelationshipImpl) {
-			return "Relationship";
+			return BaseTypeId.CMIS_RELATIONSHIP.value();
 		} else if (so instanceof PolicyImpl) {
-			return "Policy";
+			return BaseTypeId.CMIS_POLICY.value();
 		} else if (so instanceof DocumentVersionImpl) {
 			return "DocumentVersion";
 		} else if (so instanceof DocumentImpl) {
-			return "Document";
+			return BaseTypeId.CMIS_DOCUMENT.value();
 		} else if (so instanceof ItemImpl) {
-			return "Item";
+			return BaseTypeId.CMIS_ITEM.value();
 		} else if (so instanceof VersionedDocumentImpl) {
 			return "VersionedDocument";
 		} else if (so instanceof FolderImpl) {
-			return "Folder";
+			return BaseTypeId.CMIS_FOLDER.value();
 		} else {
 			return null;
 		}
@@ -279,8 +276,8 @@ public class ObjectStoreImpl implements ObjectStore {
 			id = getNextId().toString();
 			so.put("_id", id);
 		}
-
-		so.put("className", getAlias(so));
+		
+		so.setBaseTypeId(getBasicTypeId(so));
 
 		objects.save(so);
 
@@ -772,7 +769,7 @@ public class ObjectStoreImpl implements ObjectStore {
 	
 	public boolean isTypeInUse(String typeId) {
 		// iterate over all the objects and check for each if the type matches
-		return this.has(new BasicDBObject("typeId", typeId));
+		return this.has(new BasicDBObject("cmis:objectTypeId", typeId));
 	}
 
 	public String storeContentStream(ContentStream cs) {

@@ -10,16 +10,12 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
 import org.apache.chemistry.opencmis.server.support.query.CalendarHelper;
 import org.apache.chemistry.opencmis.server.support.query.CmisQlStrictLexer;
 import org.apache.chemistry.opencmis.server.support.query.TextSearchLexer;
-import org.bson.BSONObject;
-import org.bson.BasicBSONObject;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
 public class WhereWalker {
 
-	TypeDefinition typeDefinition;
-
-	public WhereWalker(TypeDefinition typeDefinition) {
-		typeDefinition = this.typeDefinition;
-	}
 
 //	private boolean isSystemCol(String colName) {
 //		for (PropertyDefinition pd : typeDefinition.getPropertyDefinitions().values()) {
@@ -28,7 +24,9 @@ public class WhereWalker {
 //
 //	}
 
-	public BSONObject walk(Tree node) {
+	public DBObject walk(Tree node) {
+		if(node==null)
+			return new BasicDBObject();
 		switch (node.getType()) {
 		case CmisQlStrictLexer.NOT:
 			return walkNot(node, node.getChild(0));
@@ -113,24 +111,24 @@ public class WhereWalker {
 	}
 
 	/** For extensibility. */
-	protected BasicBSONObject walkOtherPredicate(Tree node) {
+	protected DBObject walkOtherPredicate(Tree node) {
 		throw new CmisRuntimeException("Unknown node type: " + node.getType() + " (" + node.getText() + ")");
 	}
 
-	public BasicBSONObject walkNot(Tree opNode, Tree node) {
+	public DBObject walkNot(Tree opNode, Tree node) {
 		walk(node);
 		return null;
 	}
 
-	public BSONObject walkAnd(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject and = new BasicBSONObject();
-		and.put("$and", new BSONObject[] { walk(leftNode), walk(rightNode) });
+	public DBObject walkAnd(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject and = new BasicDBObject();
+		and.put("$and", new DBObject[] { walk(leftNode), walk(rightNode) });
 		return and;
 	}
 
-	public BSONObject walkOr(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject or = new BasicBSONObject();
-		or.put("$or", new BSONObject[] { walk(leftNode), walk(rightNode) });
+	public DBObject walkOr(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject or = new BasicDBObject();
+		or.put("$or", new DBObject[] { walk(leftNode), walk(rightNode) });
 		return or;
 	}
 
@@ -155,7 +153,7 @@ public class WhereWalker {
 		}
 	}
 
-	public BSONObject walkSearchExpr(Tree node) {
+	public DBObject walkSearchExpr(Tree node) {
 		switch (node.getType()) {
 		case TextSearchLexer.TEXT_AND:
 			return walkTextAnd(node);
@@ -178,112 +176,112 @@ public class WhereWalker {
 		throw new CmisRuntimeException("Unknown node type: " + node.getType() + " (" + node.getText() + ")");
 	}
 
-	public BSONObject walkEquals(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject equals = new BasicBSONObject();
+	public DBObject walkEquals(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject equals = new BasicDBObject();
 		equals.put(walkExpr(leftNode).toString(), walkExpr(rightNode));
 		return equals;
 	}
 
-	public BSONObject walkNotEquals(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject notEquals = new BasicBSONObject();
-		notEquals.put(walkExpr(leftNode).toString(), new BasicBSONObject("$ne", walkExpr(rightNode)));
+	public DBObject walkNotEquals(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject notEquals = new BasicDBObject();
+		notEquals.put(walkExpr(leftNode).toString(), new BasicDBObject("$ne", walkExpr(rightNode)));
 
 		return notEquals;
 	}
 
-	public BSONObject walkGreaterThan(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject greaterThan = new BasicBSONObject();
-		greaterThan.put(walkExpr(leftNode).toString(), new BasicBSONObject("$gt", walkExpr(rightNode)));
+	public DBObject walkGreaterThan(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject greaterThan = new BasicDBObject();
+		greaterThan.put(walkExpr(leftNode).toString(), new BasicDBObject("$gt", walkExpr(rightNode)));
 
 		return greaterThan;
 	}
 
-	public BSONObject walkGreaterOrEquals(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject greaterOrEquals = new BasicBSONObject();
-		greaterOrEquals.put(walkExpr(leftNode).toString(), new BasicBSONObject("$gte", walkExpr(rightNode)));
+	public DBObject walkGreaterOrEquals(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject greaterOrEquals = new BasicDBObject();
+		greaterOrEquals.put(walkExpr(leftNode).toString(), new BasicDBObject("$gte", walkExpr(rightNode)));
 
 		return greaterOrEquals;
 	}
 
-	public BSONObject walkLessThan(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject lessThan = new BasicBSONObject();
-		lessThan.put(walkExpr(leftNode).toString(), new BasicBSONObject("$lt", walkExpr(rightNode)));
+	public DBObject walkLessThan(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject lessThan = new BasicDBObject();
+		lessThan.put(walkExpr(leftNode).toString(), new BasicDBObject("$lt", walkExpr(rightNode)));
 
 		return lessThan;
 	}
 
-	public BSONObject walkLessOrEquals(Tree opNode, Tree leftNode, Tree rightNode) {
-		BSONObject lessOrEquals = new BasicBSONObject();
-		lessOrEquals.put(walkExpr(leftNode).toString(), new BasicBSONObject("$lte", walkExpr(rightNode)));
+	public DBObject walkLessOrEquals(Tree opNode, Tree leftNode, Tree rightNode) {
+		DBObject lessOrEquals = new BasicDBObject();
+		lessOrEquals.put(walkExpr(leftNode).toString(), new BasicDBObject("$lte", walkExpr(rightNode)));
 
 		return lessOrEquals;
 	}
 
-	public BSONObject walkIn(Tree opNode, Tree colNode, Tree listNode) {
-		BSONObject in = new BasicBSONObject();
-		in.put(walkExpr(colNode).toString(), new BasicBSONObject("$in", walkExpr(listNode)));
+	public DBObject walkIn(Tree opNode, Tree colNode, Tree listNode) {
+		DBObject in = new BasicDBObject();
+		in.put(walkExpr(colNode).toString(), new BasicDBObject("$in", walkExpr(listNode)));
 
 		return in;
 	}
 
-	public BSONObject walkNotIn(Tree opNode, Tree colNode, Tree listNode) {
-		BSONObject notIn = new BasicBSONObject();
-		notIn.put(walkExpr(colNode).toString(), new BasicBSONObject("$nin", walkExpr(listNode)));
+	public DBObject walkNotIn(Tree opNode, Tree colNode, Tree listNode) {
+		DBObject notIn = new BasicDBObject();
+		notIn.put(walkExpr(colNode).toString(), new BasicDBObject("$nin", walkExpr(listNode)));
 
 		return notIn;
 	}
 
-	public BSONObject walkInAny(Tree opNode, Tree colNode, Tree listNode) {
+	public DBObject walkInAny(Tree opNode, Tree colNode, Tree listNode) {
 		// 多值字段的时候用anyIn
 		return walkIn(opNode, colNode, listNode);
 	}
 
-	public BSONObject walkNotInAny(Tree opNode, Tree colNode, Tree listNode) {
+	public DBObject walkNotInAny(Tree opNode, Tree colNode, Tree listNode) {
 		// 多值字段的时候用not any in
 		return walkNotIn(opNode, colNode, listNode);
 	}
 
-	public BSONObject walkEqAny(Tree opNode, Tree literalNode, Tree colNode) {
+	public DBObject walkEqAny(Tree opNode, Tree literalNode, Tree colNode) {
 		return walkEquals(opNode, colNode, literalNode);
 	}
 
-	public BSONObject walkIsNull(Tree opNode, Tree colNode) {
-		BSONObject isNull = new BasicBSONObject();
-		isNull.put(walkExpr(colNode).toString(), new BasicBSONObject("$exists", false));
+	public DBObject walkIsNull(Tree opNode, Tree colNode) {
+		DBObject isNull = new BasicDBObject();
+		isNull.put(walkExpr(colNode).toString(), new BasicDBObject("$exists", false));
 
 		return isNull;
 	}
 
-	public BSONObject walkIsNotNull(Tree opNode, Tree colNode) {
-		BSONObject isNotNull = new BasicBSONObject();
-		isNotNull.put(walkExpr(colNode).toString(), new BasicBSONObject("$exists", true));
+	public DBObject walkIsNotNull(Tree opNode, Tree colNode) {
+		DBObject isNotNull = new BasicDBObject();
+		isNotNull.put(walkExpr(colNode).toString(), new BasicDBObject("$exists", true));
 
 		return isNotNull;
 	}
 
-	public BSONObject walkLike(Tree opNode, Tree colNode, Tree stringNode) {
-		BSONObject like = new BasicBSONObject();
+	public DBObject walkLike(Tree opNode, Tree colNode, Tree stringNode) {
+		DBObject like = new BasicDBObject();
 		like.put(walkExpr(colNode).toString(), "/" + walkExpr(stringNode) + "/");
 
 		return like;
 	}
 
-	public BSONObject walkNotLike(Tree opNode, Tree colNode, Tree stringNode) {
+	public DBObject walkNotLike(Tree opNode, Tree colNode, Tree stringNode) {
 
-		BSONObject notLike = new BasicBSONObject();
-		notLike.put(walkExpr(colNode).toString(), new BasicBSONObject("$not", "/" + walkExpr(stringNode) + "/"));
+		DBObject notLike = new BasicDBObject();
+		notLike.put(walkExpr(colNode).toString(), new BasicDBObject("$not", "/" + walkExpr(stringNode) + "/"));
 
 		return notLike;
 	}
 
-	public BSONObject walkContains(Tree opNode, Tree qualNode, Tree queryNode) {
+	public DBObject walkContains(Tree opNode, Tree qualNode, Tree queryNode) {
 		if (qualNode != null) {
 			return walkSearchExpr(qualNode);
 		}
 		return walkSearchExpr(queryNode);
 	}
 
-	public BSONObject walkInFolder(Tree opNode, Tree qualNode, Tree paramNode) {
+	public DBObject walkInFolder(Tree opNode, Tree qualNode, Tree paramNode) {
 		if (qualNode != null) {
 			walkExpr(qualNode);
 		}
@@ -291,7 +289,7 @@ public class WhereWalker {
 		return null;
 	}
 
-	public BSONObject walkInTree(Tree opNode, Tree qualNode, Tree paramNode) {
+	public DBObject walkInTree(Tree opNode, Tree qualNode, Tree paramNode) {
 		if (qualNode != null) {
 			walkExpr(qualNode);
 		}
@@ -343,27 +341,27 @@ public class WhereWalker {
 		return null;
 	}
 
-	protected BSONObject walkTextAnd(Tree node) {
+	protected DBObject walkTextAnd(Tree node) {
 		return null;
 	}
 
-	protected BSONObject walkTextOr(Tree node) {
+	protected DBObject walkTextOr(Tree node) {
 		return null;
 	}
 
-	protected BSONObject walkTextMinus(Tree node) {
+	protected DBObject walkTextMinus(Tree node) {
 		return null;
 	}
 
-	protected BSONObject walkTextWord(Tree node) {
+	protected DBObject walkTextWord(Tree node) {
 		return null;
 	}
 
-	protected BSONObject walkTextPhrase(Tree node) {
+	protected DBObject walkTextPhrase(Tree node) {
 		return null;
 	}
 
-	protected BSONObject walkScore(Tree node) {
+	protected DBObject walkScore(Tree node) {
 		return null;
 	}
 
