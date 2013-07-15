@@ -75,17 +75,45 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	// private final Map<String, TypeDefinitionContainer> fTypesMap = new
 	// HashMap<String, TypeDefinitionContainer>();
 
+	private Map<String, TypeDefinition> typeCache = new HashMap<String, TypeDefinition>();
+
 	private DBCollection types;
 
 	public TypeManagerImpl(String repositoryId) {
 		try {
-			MongoClient mongoClient = new MongoClient("localhost");
+			MongoClient mongoClient = new MongoClient(ConfigConstants.DB_HOST);
 			DB db = mongoClient.getDB(repositoryId);
 			types = db.getCollection("types");
-
+			init();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void init() {
+		DBCursor dbCursor = types.find();
+		try {
+			for (DBObject o : dbCursor) {
+				TypeDefinition typeDefinition = BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(o), true);
+				typeCache.put(typeDefinition.getId(), typeDefinition);
+			}
+		} finally {
+			dbCursor.close();
+		}
+	}
+
+	private TypeDefinition getTypeDefinition(String typeId) {
+		if (typeCache.containsKey(typeId))
+			return typeCache.get(typeId);
+
+		DBObject dbObject = types.findOne(new BasicDBObject("_id", typeId));
+		if (dbObject == null)
+			return null;
+
+		TypeDefinition typeDefinition = BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(dbObject), true);
+		typeCache.put(typeDefinition.getId(), typeDefinition);
+
+		return typeDefinition;
 	}
 
 	/*
@@ -96,24 +124,23 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	 * .String)
 	 */
 	public TypeDefinitionContainer getTypeById(String typeId) {
-		DBObject dbObject = types.findOne(new BasicDBObject("_id", typeId));
-		if(dbObject==null)
+
+		TypeDefinition typeDefinition = getTypeDefinition(typeId);
+		if (typeDefinition == null)
 			return null;
-		return getTypeDefinitionContainer(dbObject);
+
+		return getTypeDefinitionContainer(typeDefinition);
 	}
 
-	private TypeDefinitionContainer getTypeDefinitionContainer(DBObject dbObject) {
-		TypeDefinition typeDefinition = BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(dbObject), true);
+	private TypeDefinitionContainer getTypeDefinitionContainer(TypeDefinition typeDefinition) {
 
 		TypeDefinitionContainerImpl container = new TypeDefinitionContainerImpl(typeDefinition);
-		DBCursor dbCursor = types.find(new BasicDBObject("parentId", typeDefinition.getId()));
-		try {
-			for (DBObject o : dbCursor) {
-				container.getChildren().add(getTypeDefinitionContainer(o));
+		for (TypeDefinition td : typeCache.values()) {
+			if (td.getParentTypeId() == typeDefinition.getId()) {
+				container.getChildren().add(getTypeDefinitionContainer(td));
 			}
-		} finally {
-			dbCursor.close();
 		}
+
 		return container;
 	}
 
@@ -125,11 +152,15 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	 * (java.lang.String)
 	 */
 	public TypeDefinition getTypeByQueryName(String typeQueryName) {
-		DBObject dbObject = types.findOne(new BasicDBObject("queryName", typeQueryName));
-		if (dbObject == null)
+		if (typeQueryName == null)
 			return null;
-
-		return BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(dbObject), true);
+		for (TypeDefinition td : typeCache.values()) {
+			if (typeQueryName.equals(td.getQueryName())) {
+				return td;
+			}
+		}
+		
+		return null;
 	}
 
 	/*
@@ -141,13 +172,8 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	 */
 	public Collection<TypeDefinitionContainer> getTypeDefinitionList() {
 		Collection<TypeDefinitionContainer> collection = new HashSet<TypeDefinitionContainer>();
-		DBCursor dbCursor = types.find();
-		try {
-			for (DBObject dbObject : dbCursor) {
-				collection.add(getTypeDefinitionContainer(dbObject));
-			}
-		} finally {
-			dbCursor.close();
+		for (TypeDefinition td : typeCache.values()) {
+			collection.add(getTypeDefinitionContainer(td));
 		}
 
 		return collection;
@@ -159,16 +185,12 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	 * @see org.apache.chemistry.opencmis.inmemory.TypeManager#getRootTypes()
 	 */
 	public List<TypeDefinitionContainer> getRootTypes() {
-		// just take first repository
 		List<TypeDefinitionContainer> rootTypes = new ArrayList<TypeDefinitionContainer>();
-		DBCursor dbCursor = types.find();
-		try {
-			for (DBObject dbObject : dbCursor) {
-				if (isRootType(dbObject))
-					rootTypes.add(getTypeDefinitionContainer(dbObject));
+
+		for (TypeDefinition td : typeCache.values()) {
+			if (isRootType(td.getId())) {
+				rootTypes.add(getTypeDefinitionContainer(td));
 			}
-		} finally {
-			dbCursor.close();
 		}
 
 		return rootTypes;
@@ -222,6 +244,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 		// add type to type map
 		DBObject dbObject = TypeConverter.toDBObject(cmisType);
 		types.save(dbObject);
+		typeCache.put(cmisType.getId(), cmisType);
 
 		LOG.info("Adding type definition with name " + cmisType.getLocalName() + " and id " + cmisType.getId() + " to repository.");
 	}
@@ -238,6 +261,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	public void deleteTypeDefinition(String typeId) {
 		TypeDefinitionContainer typeDef = getTypeById(typeId);
 		types.remove(new BasicDBObject("_id", typeDef.getTypeDefinition().getId()));
+		typeCache.remove(typeId);
 		for (TypeDefinitionContainer c : typeDef.getChildren()) {
 			deleteTypeDefinition(c.getTypeDefinition().getId());
 		}
@@ -252,6 +276,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	 */
 	public void clearTypeSystem() {
 		types.drop();
+		typeCache.clear();
 		createCmisDefaultTypes();
 	}
 
@@ -309,15 +334,13 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 		}
 	}
 
-	private static boolean isRootType(DBObject dbObject) {
-		String objectId = (String) dbObject.get("_id");
-		if (objectId.equals("cmis:folder") || objectId.equals("cmis:document") || objectId.equals("cmis:relationship") || objectId.equals("cmis:policy") || objectId.equals("cmis:item") || objectId.equals("cmis:secondary") // CMIS
-																																																								// 1.1
-		) {
-			return true;
-		} else {
-			return false;
-		}
+	private static boolean isRootType(String objectId) {
+		return objectId.equals("cmis:folder")
+				|| objectId.equals("cmis:document")
+				|| objectId.equals("cmis:relationship")
+				|| objectId.equals("cmis:policy")
+				|| objectId.equals("cmis:item")
+				|| objectId.equals("cmis:secondary");
 	}
 
 	private static PropertyDefinition<?> clonePropertyDefinition(PropertyDefinition<?> src) {

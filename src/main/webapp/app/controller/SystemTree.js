@@ -6,7 +6,7 @@ Ext.define('sphinx.controller.SystemTree', {
     init: function() {
     	this.control({
             'systemTree': {
-            	select: this.onSelected,
+            	select: this.onSelected
             }
         });
     	

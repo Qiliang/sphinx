@@ -38,7 +38,7 @@ Ext.define('sphinx.model.AllowableActions', {
         type: 'ajax',
         url: 'browser/A1/root',
         extraParams:{
-        	cmisselector:'allowableActions',
+        	cmisselector:'allowableActions'
         },reader: {
             type: 'json'
         }

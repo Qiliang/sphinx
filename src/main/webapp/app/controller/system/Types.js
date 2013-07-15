@@ -7,7 +7,7 @@ Ext.define('sphinx.controller.system.Types', {
     init: function() {
     	this.control({
             'systemTree': {
-            	select: this.onSelected,
+            	select: this.onSelected
             }
         });
     	
@@ -30,7 +30,7 @@ Ext.define('sphinx.controller.system.Types', {
     	proxy.extraParams.objectId=100;
     	store.reload({
     	    params: {
-    	        page: 1,
+    	        page: 1
     	}});
     }
     

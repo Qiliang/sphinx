@@ -43,7 +43,7 @@ Ext.define('sphinx.view.document.CreateFolder', {
             ],
         buttons: [{
 	        text: 'Save',
-	        action: 'save',
+	        action: 'save'
 	    },{
 	        text: 'Cancel',
 	        handler: function() {

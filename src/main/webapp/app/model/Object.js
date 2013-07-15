@@ -11,7 +11,7 @@ Ext.define('sphinx.model.Object', {
         { name: 'cmis:lastModificationDate' ,type: 'date', dateFormat:'timestamp'},
         { name: 'cmis:lastModifiedBy' ,type: 'string'},
         { name: 'cmis:objectTypeId' ,type: 'string'}
-    ],
+    ]
     //associations: [{type: 'hasMany', model: 'sphinx.model.Property', name: 'properties'}]
 
 

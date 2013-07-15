@@ -28,7 +28,7 @@ Ext.define('sphinx.view.document.ACL', {
             text: 'principal',
             flex: 50,
             dataIndex: 'principal',
-            tpl: '{principal.principalId}',
+            tpl: '{principal.principalId}'
         },{
             text: 'permissions',
             xtype: 'templatecolumn',
@@ -38,7 +38,7 @@ Ext.define('sphinx.view.document.ACL', {
         },{
             text: 'isDirect',
             dataIndex: 'isDirect',
-            flex: 15,
+            flex: 15
         }],dockedItems:[{
             xtype: 'toolbar',
             items: [
@@ -51,7 +51,7 @@ Ext.define('sphinx.view.document.ACL', {
     allowableActionsProperties:{
     	title: '扩展权限',
     	xtype: 'propertygrid',
-    	nameColumnWidth: 200,
+    	nameColumnWidth: 200
     },
     
     initComponent: function() {
@@ -67,6 +67,6 @@ Ext.define('sphinx.view.document.ACL', {
         this.callParent(arguments);
     	this.down('grid').reconfigure(this.acl);
     	this.down('propertygrid').setSource(this.allowableActions.data);
-    },
+    }
 });
 

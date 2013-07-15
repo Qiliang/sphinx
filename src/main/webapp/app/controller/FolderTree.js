@@ -13,7 +13,7 @@ Ext.define('sphinx.controller.FolderTree', {
     },
 
     onPanelRendered: function() {
-        console.log('The folderTree was rendered');
+       // console.log('The folderTree was rendered');
     },
     
     viewContent: function( tree, record, item, index, e, eOpts ){

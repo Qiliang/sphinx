@@ -7,7 +7,7 @@ Ext.define('sphinx.store.ACL', {
         api: {
             create  : 'browser/A1/root?cmisselector=applyACL',
             read    : 'browser/A1/root?cmisselector=acl',
-            destroy :  'browser/A1/root?cmisselector=applyACL',
+            destroy :  'browser/A1/root?cmisselector=applyACL'
         },
       reader: {
             type: 'json',

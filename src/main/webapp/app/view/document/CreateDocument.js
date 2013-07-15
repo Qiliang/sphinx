@@ -47,7 +47,7 @@ Ext.define('sphinx.view.document.CreateDocument', {
             ],
         buttons: [{
 	        text: 'Save',
-	        action: 'save',
+	        action: 'save'
 	    },{
 	        text: 'Cancel',
 	        handler: function() {

@@ -7,11 +7,11 @@ Ext.define('sphinx.controller.object.ACL', {
     init: function() {
     	this.control({
             'documentACL toolbar *[itemId=create]': {
-                click: this.onCreateClick,
+                click: this.onCreateClick
             },'documentACL toolbar *[itemId=delete]': {
-                click: this.onDeleteClick,
+                click: this.onDeleteClick
             },'documentCreateACL button[action=save]': {
-                click: this.onSaveClick,
+                click: this.onSaveClick
             }
         });
     },

@@ -9,7 +9,7 @@ Ext.define('sphinx.view.Header', {
     },
     
     defaults: { // defaults are applied to items, not the container
-    	margins: '5 5 5 5',
+    	margins: '5 5 5 5'
     },
     
     margins: '5 5 5 5',
@@ -21,7 +21,7 @@ Ext.define('sphinx.view.Header', {
             flex: 1
         },{
             xtype: 'component',
-            html: '<span style="font-size: 12px;font-weight: bolder;color:#FFF">'+Ext.util.Cookies.get('username')+'</span>',
+            html: '<span style="font-size: 12px;font-weight: bolder;color:#FFF">'+Ext.util.Cookies.get('username')+'</span>'
         },{
         	xtype: 'tool',
             type: 'gear'

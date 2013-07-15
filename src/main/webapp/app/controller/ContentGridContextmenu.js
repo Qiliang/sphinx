@@ -35,7 +35,7 @@ Ext.define('sphinx.controller.ContentGridContextmenu', {
     	
     	this.getACLStore().load({
     		scope: this,
-    		params:{'objectId':objectId },
+    		params:{'objectId':objectId }
     	});
     	
     	sphinx.model.AllowableActions.load(null,{

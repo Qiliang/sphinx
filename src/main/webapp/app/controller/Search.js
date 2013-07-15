@@ -7,7 +7,7 @@ Ext.define('sphinx.controller.Search', {
     init: function() {
     	this.control({
             'searchTemplate toolbar #newSearch': {
-                click: this.onActionClick,
+                click: this.onActionClick
             },'searchForm button[action=search]':{
             	click:this.onSearchClick
             }

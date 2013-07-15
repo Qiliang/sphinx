@@ -12,7 +12,7 @@ Ext.define('sphinx.model.Group', {
         { name: 'cmis:lastModifiedBy' ,type: 'string'},
         { name: 'cmis:objectTypeId' ,type: 'string'},
         { name: 'system:users' ,type: 'string'}
-    ],
+    ]
 
 
 

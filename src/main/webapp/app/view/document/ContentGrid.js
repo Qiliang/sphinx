@@ -110,24 +110,24 @@ Ext.define('sphinx.view.document.ContentGrid' ,{
             defaults: {
                 xtype: 'button',
                 scale: 'large',
-                iconAlign: 'left',
+                iconAlign: 'left'
             },
             items: [{
                 text:'剪切板',
-                width: '100%',
+                width: '100%'
             },{
             	text:'粘贴',
-                width: 60,
+                width: 60
             },{
                 colspan: 2,
                 width: '100%',
                 text: '剪切',
-                scale: 'small',
+                scale: 'small'
             },{
                 colspan: 2,
                 width: '100%',
                 text: '复制',
-                scale: 'small',
+                scale: 'small'
             }]
         }
     }

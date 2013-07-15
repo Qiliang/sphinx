@@ -5,7 +5,7 @@ Ext.define('sphinx.model.ACE', {
 		{ name: 'principal' ,type: 'auto'},
 		{ name: 'permissions' ,type: 'auto'},
 		{ name: 'isDirect' ,type: 'boolean'}
-    ],
+    ]
 
 
 

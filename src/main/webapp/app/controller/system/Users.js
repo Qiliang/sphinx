@@ -7,7 +7,7 @@ Ext.define('sphinx.controller.system.Users', {
     init: function() {
     	this.control({
             'systemTree': {
-            	select: this.onSelected,
+            	select: this.onSelected
             },
             'userGrid toolbar *[itemId=create]': {
             	click:this.onOpenCreateUser
@@ -35,7 +35,7 @@ Ext.define('sphinx.controller.system.Users', {
     	proxy.extraParams.objectId=100;
     	store.reload({
     	    params: {
-    	        page: 1,
+    	        page: 1
     	}});
     },
     

@@ -44,6 +44,7 @@ import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisConstraintException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisPermissionDeniedException;
+import org.apache.chemistry.opencmis.inmemory.ConfigConstants;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Document;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
@@ -132,7 +133,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		fRepositoryId = repositoryId;
 
 		try {
-			MongoClient mongoClient = new MongoClient("localhost");
+			MongoClient mongoClient = new MongoClient(ConfigConstants.DB_HOST);
 			DB db = mongoClient.getDB(fRepositoryId);
 			fs = new GridFS(db);
 			objects = new MongoMap(db.getCollection("objects"), this);
@@ -294,10 +295,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		objects.remove(id);
 	}
 
-	public Set<String> getIds() {
-		Set<String> entries = objects.keySet();
-		return entries;
-	}
 
 	/**
 	 * Clear repository and remove all data.
@@ -769,14 +766,13 @@ public class ObjectStoreImpl implements ObjectStore {
 		return res;
 	}
 
+	public Set<String> getIds(){
+		return objects.keySet();
+	}
+	
 	public boolean isTypeInUse(String typeId) {
 		// iterate over all the objects and check for each if the type matches
-		for (String objectId : getIds()) {
-			StoredObject so = getObjectById(objectId);
-			if (so.getTypeId().equals(typeId))
-				return true;
-		}
-		return false;
+		return this.has(new BasicDBObject("typeId", typeId));
 	}
 
 	public String storeContentStream(ContentStream cs) {

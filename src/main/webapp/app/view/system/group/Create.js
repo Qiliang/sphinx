@@ -40,7 +40,7 @@ Ext.define('sphinx.view.system.group.Create', {
             },{
 	            xtype: 'textfield',
 	            name: 'propertyValue[1]',
-	            fieldLabel: '名称',
+	            fieldLabel: '名称'
             },{                	
 	            xtype: 'hiddenfield',
 	            name: 'propertyId[2]',
@@ -60,7 +60,7 @@ Ext.define('sphinx.view.system.group.Create', {
             ],
         buttons: [{
 	        text: 'Save',
-	        action: 'save',
+	        action: 'save'
 	    },{
 	        text: 'Cancel',
 	        handler: function() {

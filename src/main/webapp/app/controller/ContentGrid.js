@@ -10,7 +10,7 @@ Ext.define('sphinx.controller.ContentGrid', {
     init: function() {
     	this.control({
             'contentGrid': {
-                itemdblclick: this.viewContent2,
+                itemdblclick: this.viewContent2
             },
             'folderTree': {
             	select: this.onFolderTreeSelect
@@ -61,7 +61,7 @@ Ext.define('sphinx.controller.ContentGrid', {
     	        Ext.Msg.alert(objectId,response.responseText);
     	    },
     	    failure: function(response, opts) {
-    	        console.log('server-side failure with status code ' + response.status);
+    	       // console.log('server-side failure with status code ' + response.status);
     	    }
     	});
     },
@@ -72,7 +72,7 @@ Ext.define('sphinx.controller.ContentGrid', {
     	proxy.extraParams.objectId=record.get('cmis:objectId');
     	store.reload({
     	    params: {
-    	        page: 1,
+    	        page: 1
     	}});
     	grid.setFolder(record);
     	//tree.expandNode( record );

@@ -6,7 +6,7 @@ Ext.define('sphinx.controller.App', {
     init: function() {
     	this.control({
             'appHeader tool[type=close]': {
-            	click: this.onLogout,
+            	click: this.onLogout
             }
         });
     },

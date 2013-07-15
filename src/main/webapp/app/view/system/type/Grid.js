@@ -23,7 +23,7 @@ Ext.define('sphinx.view.system.type.Grid', {
                 flex: 1,
                 sortable: true,
                 dataIndex: 'localName',
-                align: 'center',
+                align: 'center'
             },{
                 text: 'Assigned To',
                 flex: 1,
