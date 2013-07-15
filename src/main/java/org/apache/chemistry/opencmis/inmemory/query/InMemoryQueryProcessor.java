@@ -64,6 +64,7 @@ import org.apache.chemistry.opencmis.server.support.query.QueryObject.JoinSpec;
 import org.apache.chemistry.opencmis.server.support.query.QueryObject.SortSpec;
 import org.apache.chemistry.opencmis.server.support.query.QueryUtilStrict;
 import org.apache.chemistry.opencmis.server.support.query.StringUtil;
+import org.bson.BSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -287,6 +288,9 @@ public class InMemoryQueryProcessor {
 	 * @return true if it matches, false if it not matches
 	 */
 	boolean evalWhereNode(StoredObject so, String user, Tree node) {
+		//WhereWalker whereWalker = new WhereWalker();
+		//BSONObject bsonObject=whereWalker.walk(node);
+		//System.out.println(bsonObject.toString());
 		return new InMemoryWhereClauseWalker(so, user).walkPredicate(node);
 	}
 

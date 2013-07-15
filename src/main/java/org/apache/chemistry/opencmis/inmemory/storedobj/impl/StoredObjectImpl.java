@@ -44,7 +44,10 @@ import org.apache.chemistry.opencmis.commons.data.ExtensionsData;
 import org.apache.chemistry.opencmis.commons.data.ObjectList;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.data.RenditionData;
+import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
+import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.enums.CmisVersion;
+import org.apache.chemistry.opencmis.commons.enums.PropertyType;
 import org.apache.chemistry.opencmis.commons.enums.RelationshipDirection;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyData;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyBooleanImpl;
@@ -58,6 +61,7 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyUriImpl;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.inmemory.DataObjectCreator;
 import org.apache.chemistry.opencmis.inmemory.FilterParser;
+import org.apache.chemistry.opencmis.inmemory.TypeManagerImpl;
 import org.apache.chemistry.opencmis.inmemory.server.InMemoryServiceContext;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
@@ -77,6 +81,7 @@ import com.mongodb.DBObject;
  */
 public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBObject {
 
+	private static final long serialVersionUID = 7092536313605592934L;
 	public static final String RENDITION_MIME_TYPE_JPEG = "image/jpeg";
 	public static final String RENDITION_MIME_TYPE_PNG = "image/png";
 	public static final String RENDITION_SUFFIX = "-rendition";
@@ -228,25 +233,30 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 	}
 
 	public void setProperties(Map<String, PropertyData<?>> props) {
-		BasicDBList basicDBList = new BasicDBList();
 		for (PropertyData propertyData : props.values()) {
-			DBObject dbObject = to(propertyData);
-			basicDBList.add(dbObject);
+			put(propertyData.getId(), propertyData.getValues());
 		}
-
-		put("properties", basicDBList);
 	}
 
 	public Map<String, PropertyData<?>> getProperties() {
-
+		String typeId = getTypeId();
+		TypeDefinition typeDefinition = TypeManagerImpl.getTypeDefinition(typeId);
 		Map<String, PropertyData<?>> map = new LinkedHashMap<String, PropertyData<?>>();
-		Object result = get("properties");
-		if (result instanceof BasicDBList) {
-			BasicDBList basicDBList = (BasicDBList) result;
-			for (Object o : basicDBList) {
-				PropertyData propertyData = from((BasicDBObject) o);
-				map.put(propertyData.getId(), propertyData);
+
+		for (PropertyDefinition pd : typeDefinition.getPropertyDefinitions().values()) {
+			AbstractPropertyData propertyData = newPropertyData(pd.getPropertyType());
+			propertyData.setId(pd.getId());
+			propertyData.setLocalName(pd.getLocalName());
+			propertyData.setQueryName(pd.getQueryName());
+			propertyData.setDisplayName(pd.getDisplayName());
+			Object value = get(pd.getId());
+			if (value != null) {
+				if (value instanceof List)
+					propertyData.setValues((List) value);
+				else
+					propertyData.setValue(value);
 			}
+			map.put(propertyData.getId(), propertyData);
 		}
 
 		return map;
@@ -591,22 +601,23 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		return Collections.unmodifiableList(toStringList(basicDBList));
 	}
 
-	private AbstractPropertyData newPropertyData(String className) {
-		if ("boolean".equals(className))
+	private AbstractPropertyData newPropertyData(PropertyType propertyType) {
+
+		if (PropertyType.BOOLEAN.equals(propertyType))
 			return new PropertyBooleanImpl();
-		else if ("datetime".equals(className))
+		else if (PropertyType.DATETIME.equals(propertyType))
 			return new PropertyDateTimeImpl();
-		else if ("decimal".equals(className))
+		else if (PropertyType.DECIMAL.equals(propertyType))
 			return new PropertyDecimalImpl();
-		else if ("html".equals(className))
+		else if (PropertyType.HTML.equals(propertyType))
 			return new PropertyHtmlImpl();
-		else if ("id".equals(className))
+		else if (PropertyType.ID.equals(propertyType))
 			return new PropertyIdImpl();
-		else if ("int".equals(className))
+		else if (PropertyType.INTEGER.equals(propertyType))
 			return new PropertyIntegerImpl();
-		else if ("string".equals(className))
+		else if (PropertyType.STRING.equals(propertyType))
 			return new PropertyStringImpl();
-		else if ("uri".equals(className))
+		else if (PropertyType.URI.equals(propertyType))
 			return new PropertyUriImpl();
 		return null;
 	}
@@ -633,9 +644,9 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		}
 	}
 
-	private PropertyData from(BasicDBObject dbObject) {
+	private PropertyData from(BasicDBObject dbObject, PropertyType propertyType) {
 		try {
-			AbstractPropertyData propertyData = newPropertyData(dbObject.getString("className"));
+			AbstractPropertyData propertyData = newPropertyData(propertyType);
 			propertyData.setId(dbObject.getString("id"));
 			propertyData.setLocalName(dbObject.getString("localName"));
 			propertyData.setQueryName(dbObject.getString("queryName"));
@@ -648,21 +659,6 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		}
 		return null;
 		// PropertyData<T>
-	}
-
-	private DBObject to(PropertyData propertyData) {
-		propertyData.getClass().getName();
-
-		BasicDBObject dbObject = new BasicDBObject();
-		dbObject.markAsPartialObject();
-
-		dbObject.put("id", propertyData.getId());
-		dbObject.put("localName", propertyData.getLocalName());
-		dbObject.put("queryName", propertyData.getQueryName());
-		dbObject.put("displayName", propertyData.getDisplayName());
-		dbObject.put("values", propertyData.getValues());
-		dbObject.put("className", getAlias(propertyData));
-		return dbObject;
 	}
 
 }

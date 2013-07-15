@@ -75,7 +75,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 	// private final Map<String, TypeDefinitionContainer> fTypesMap = new
 	// HashMap<String, TypeDefinitionContainer>();
 
-	private Map<String, TypeDefinition> typeCache = new HashMap<String, TypeDefinition>();
+	private static Map<String, TypeDefinition> typeCache = new HashMap<String, TypeDefinition>();
 
 	private DBCollection types;
 
@@ -102,18 +102,11 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 		}
 	}
 
-	private TypeDefinition getTypeDefinition(String typeId) {
+	public static TypeDefinition getTypeDefinition(String typeId) {
 		if (typeCache.containsKey(typeId))
 			return typeCache.get(typeId);
 
-		DBObject dbObject = types.findOne(new BasicDBObject("_id", typeId));
-		if (dbObject == null)
-			return null;
-
-		TypeDefinition typeDefinition = BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(dbObject), true);
-		typeCache.put(typeDefinition.getId(), typeDefinition);
-
-		return typeDefinition;
+		return null;
 	}
 
 	/*
@@ -159,7 +152,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 				return td;
 			}
 		}
-		
+
 		return null;
 	}
 
