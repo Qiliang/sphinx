@@ -20,6 +20,7 @@ Ext.define('sphinx.view.document.ContentGridContextmenu' ,{
     },{
         text: '剪切'
     },{
+    	itemId: 'delete',
         text: '删除'
     },{
         text: '重命名'

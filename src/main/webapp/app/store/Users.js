@@ -1,7 +1,7 @@
 Ext.define('sphinx.store.Users', {
     extend: 'Ext.data.Store',
     model: 'sphinx.model.User',
-    autoLoad: true,
+    autoLoad: false,
     remoteSort: true,
     pageSize: 10,
     

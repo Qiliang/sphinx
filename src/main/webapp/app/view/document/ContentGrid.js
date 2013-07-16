@@ -57,7 +57,7 @@ Ext.define('sphinx.view.document.ContentGrid' ,{
 				            xtype: 'toolbar',
 				            items: [
 				                {text:'新建', menu: this.newMenu },
-				                Ext.create('Ext.Action', { text: '删除'}),
+				                Ext.create('Ext.Action', { text: '删除',itemId: 'delete'}),
 				                {text:'剪切板',menu: this.chipboardMenu},
 				                Ext.create('Ext.form.field.Text', { emptyText: '按名称搜索',width: 135})
 				            ]
@@ -93,8 +93,6 @@ Ext.define('sphinx.view.document.ContentGrid' ,{
             	itemId:'newDocument',
                text: '新建文档'
             }, '-',{
-               text: '新建报销单'
-           },{
         	   itemId:'newFolder',
                text: '新建文件夹'
            }

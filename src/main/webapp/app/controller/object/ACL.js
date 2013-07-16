@@ -37,6 +37,7 @@ Ext.define('sphinx.controller.object.ACL', {
     	    },
     	    success: function(form, action) {
     	       Ext.app.msg('Success', action.response.responseText);
+    	       button.up('window').close();
     	       contentGrid.getObjectsStore().reload();
     	       contentGrid.getFolderTreeStore().reload();
     	    },

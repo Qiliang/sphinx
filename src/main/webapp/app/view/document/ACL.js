@@ -42,8 +42,8 @@ Ext.define('sphinx.view.document.ACL', {
         }],dockedItems:[{
             xtype: 'toolbar',
             items: [
-                Ext.create('Ext.Action', { text: '新建', itemId:"create"}),
-                Ext.create('Ext.Action', { text: '删除', itemId:'delete'})
+                Ext.create('Ext.Action', { text: '配置权限', itemId:"create"})
+//                Ext.create('Ext.Action', { text: '删除', itemId:'delete'})
             ]
          }]
         

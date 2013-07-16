@@ -170,21 +170,21 @@ public interface StoredObject extends DBObject {
      */
     void setModifiedAtNow();
 
-    /**
-     * Get the repository id of this object where the object is stored.
-     * 
-     * @return
-     */
-    String getRepositoryId();
-
-    /**
-     * Assign a repository where this object will be stored. This method does
-     * not persist the object.
-     * 
-     * @param repositoryId
-     *            id of the repository
-     */
-    void setRepositoryId(String repositoryId);
+//    /**
+//     * Get the repository id of this object where the object is stored.
+//     * 
+//     * @return
+//     */
+//    String getRepositoryId();
+//
+//    /**
+//     * Assign a repository where this object will be stored. This method does
+//     * not persist the object.
+//     * 
+//     * @param repositoryId
+//     *            id of the repository
+//     */
+//    void setRepositoryId(String repositoryId);
 
     /**
      * Retrieve the list of properties

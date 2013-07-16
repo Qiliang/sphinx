@@ -167,13 +167,13 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		super.put("cmis:lastModificationDate", new Date());
 	}
 
-	public void setRepositoryId(String repositoryId) {
-		super.put("repositoryId", repositoryId);
-	}
-
-	public String getRepositoryId() {
-		return super.getString("repositoryId");
-	}
+//	public void setRepositoryId(String repositoryId) {
+//		super.put("repositoryId", repositoryId);
+//	}
+//
+//	public String getRepositoryId() {
+//		return super.getString("repositoryId");
+//	}
 
 	public List<String> getAppliedPolicies() {
 		BasicDBList policyIds = (BasicDBList) this.get("policyIds");

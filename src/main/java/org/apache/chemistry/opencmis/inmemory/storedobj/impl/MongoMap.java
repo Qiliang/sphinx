@@ -19,8 +19,8 @@ public class MongoMap {
 
 	public final DBCollection dbCollection;
 	private final ObjectStore objStore;
-	
-	public MongoMap(DBCollection dbCollection,ObjectStore objStore) {
+
+	public MongoMap(DBCollection dbCollection, ObjectStore objStore) {
 		this.dbCollection = dbCollection;
 		this.objStore = objStore;
 	}
@@ -32,7 +32,11 @@ public class MongoMap {
 	public void save(DBObject jo) {
 		dbCollection.save(jo);
 	}
-	
+
+	public void updateAclId(String id, int aclId) {
+		this.dbCollection.update(new BasicDBObject("_id", id), new BasicDBObject("$set", new BasicDBObject("aclId", aclId)));
+	}
+
 	public DBObject findOne(String id) {
 		return dbCollection.findOne(new BasicDBObject("_id", id));
 	}
@@ -44,8 +48,8 @@ public class MongoMap {
 	public StoredObject get(String id) {
 		try {
 			DBObject dbObject = dbCollection.findOne(new BasicDBObject("_id", id));
-			StoredObject so =  newInstance((String) dbObject.get("cmis:baseTypeId"));
-			if(so==null){
+			StoredObject so = newInstance((String) dbObject.get("cmis:baseTypeId"));
+			if (so == null) {
 				System.out.println(so);
 			}
 			so.putAll(dbObject);
@@ -70,20 +74,19 @@ public class MongoMap {
 		return ids;
 	}
 
-	
-	public StoredObject convert(DBObject dbObject){
-		if(dbObject==null)
+	public StoredObject convert(DBObject dbObject) {
+		if (dbObject == null)
 			return null;
 		StoredObject so = newInstance((String) dbObject.get("cmis:basicTypeId"));
 		so.putAll(dbObject);
 		return so;
 	}
-	
+
 	public List<StoredObject> from(DBCursor dbCursor) {
 		List<StoredObject> objects = new ArrayList<StoredObject>();
 		try {
 			for (DBObject dbObject : dbCursor) {
-				if(dbObject==null){
+				if (dbObject == null) {
 					System.out.println();
 				}
 				StoredObject so = newInstance((String) dbObject.get("cmis:baseTypeId"));
@@ -110,21 +113,21 @@ public class MongoMap {
 	}
 
 	private StoredObject newInstance(String className) {
-		
+
 		if (BaseTypeId.CMIS_RELATIONSHIP.value().equals(className)) {
 			return new RelationshipImpl(objStore);
 		} else if (BaseTypeId.CMIS_POLICY.value().equals(className)) {
 			return new PolicyImpl(objStore);
-		}else if ("DocumentVersion".equals(className)) {
+		} else if ("DocumentVersion".equals(className)) {
 			return null;
-			//return new DocumentVersionImpl(objStore);
-		}else if (BaseTypeId.CMIS_DOCUMENT.value().equals(className)) {
+			// return new DocumentVersionImpl(objStore);
+		} else if (BaseTypeId.CMIS_DOCUMENT.value().equals(className)) {
 			return new DocumentImpl(objStore);
-		}else if (BaseTypeId.CMIS_ITEM.value().equals(className)) {
+		} else if (BaseTypeId.CMIS_ITEM.value().equals(className)) {
 			return new ItemImpl(objStore);
-		}else if ("VersionedDocument".equals(className)) {
+		} else if ("VersionedDocument".equals(className)) {
 			return new VersionedDocumentImpl(objStore);
-		}else if (BaseTypeId.CMIS_FOLDER.value().equals(className)) {
+		} else if (BaseTypeId.CMIS_FOLDER.value().equals(className)) {
 			return new FolderImpl(objStore);
 		}
 		return null;

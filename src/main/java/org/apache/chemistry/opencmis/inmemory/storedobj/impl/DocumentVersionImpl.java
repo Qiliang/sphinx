@@ -58,10 +58,10 @@ public class DocumentVersionImpl extends StoredObjectImpl implements DocumentVer
     boolean fIsPwc; // true if this is the PWC
     String label;
 
-    public DocumentVersionImpl(String repositoryId, VersionedDocument container, ContentStream content,
+    public DocumentVersionImpl(VersionedDocument container, ContentStream content,
             VersioningState verState, ObjectStore objStore) {
         super(objStore);
-        setRepositoryId(repositoryId);
+//        setRepositoryId(repositoryId);
         fContainer = container;
         setContent(content, false);
         fIsMajor = verState == VersioningState.MAJOR || verState == null;

@@ -127,21 +127,23 @@ public class InMemoryAcl extends BasicDBObject implements Cloneable {
 	}
 
 	public int getId() {
-		return getInt("_id");
+		if (containsField("_id"))
+			return getInt("_id");
+		return -1;
 	}
 
 	public final List<InMemoryAce> getAces() {
 		List<InMemoryAce> aces = new ArrayList<InMemoryAce>();
 		Object result = get("aces");
 		if (result instanceof ArrayList) {
-			ArrayList dbList = (ArrayList)result;
+			ArrayList dbList = (ArrayList) result;
 			for (Object o : dbList) {
-				BasicDBObject dbObject= (BasicDBObject)o;
-				aces.add(new InMemoryAce(dbObject.getString("principalId"),Permission.fromValue(dbObject.getString("permission"))));
+				BasicDBObject dbObject = (BasicDBObject) o;
+				aces.add(new InMemoryAce(dbObject.getString("principalId"), Permission.fromValue(dbObject.getString("permission"))));
 			}
 			return aces;
 		}
-		
+
 		return aces;
 	}
 
@@ -286,6 +288,5 @@ public class InMemoryAcl extends BasicDBObject implements Cloneable {
 		InMemoryAcl newAcl = new InMemoryAcl(aces);
 		return newAcl;
 	}
-
 
 }

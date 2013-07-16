@@ -47,7 +47,7 @@ Ext.define('sphinx.view.document.CreateFolder', {
 	    },{
 	        text: 'Cancel',
 	        handler: function() {
-	            this.up('form').getForm().reset();
+	            this.up('window').close();
 	        }
 	    }]
     }

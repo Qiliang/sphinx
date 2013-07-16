@@ -51,7 +51,7 @@ public class VersionedDocumentImpl extends AbstractMultiFilingImpl implements Ve
 			throw new CmisConstraintException("Cannot add a version to document, document is checked out.");
 		}
 
-		DocumentVersionImpl ver = new DocumentVersionImpl(getRepositoryId(), this, content, verState, fObjStore);
+		DocumentVersionImpl ver = new DocumentVersionImpl( this, content, verState, fObjStore);
 		ver.setSystemBasePropertiesWhenCreatedDirect(getName(), getTypeId(), user); // copy
 		// name and type id from version series.
 		ver.persist();

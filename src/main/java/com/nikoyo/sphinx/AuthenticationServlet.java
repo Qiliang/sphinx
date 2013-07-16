@@ -44,11 +44,11 @@ public class AuthenticationServlet extends HttpServlet {
 		Session session=	login();
 		ObjectType objectType=session.getTypeDefinition("system:user");
 		System.out.println(objectType);
-//		ItemIterable<QueryResult> result =session.query(String.format("select cmis:name from system:user where cmis:name='%s' and system:password='%s'",username,password), false);
-//		if(!success(result)){
-//			resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//			return;
-//		}
+		ItemIterable<QueryResult> result =session.query(String.format("select cmis:name from system:user where cmis:name='%s' and system:password='%s'",username,password), false);
+		if(!success(result)){
+			resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
 		
 		resp.setStatus(HttpServletResponse.SC_OK);
 		String s= Base64.encodeBytes((username+":"+password).getBytes());

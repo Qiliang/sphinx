@@ -2,7 +2,7 @@ Ext.define('sphinx.controller.ContentGridContextmenu', {
     extend: 'Ext.app.Controller',
     
     views: ['document.ContentGridContextmenu'],
-    stores: ['ACL'],
+    stores: ['ACL','Objects','FolderTree'],
     models: ['ACE','AllowableActions'],
     
     init: function() {
@@ -14,6 +14,8 @@ Ext.define('sphinx.controller.ContentGridContextmenu', {
             	click: this.onPropertiesClick
             },'contentGridContextmenu menuitem[itemId=acl]':{
             	click: this.onAclClick
+            },'contentGridContextmenu menuitem[itemId=delete]':{
+            	click: this.onDeleteClick
             }
         });
     },
@@ -27,6 +29,26 @@ Ext.define('sphinx.controller.ContentGridContextmenu', {
     onPropertiesClick: function( item, e, eOpts){
     	var detail = Ext.create('sphinx.view.document.Detail', {'record': item.record});
     	detail.show();
+    },
+    
+    onDeleteClick: function(item, e, eOpts){
+    	var me = this;
+    	var objectId=item.record.get('cmis:objectId');
+    	Ext.Ajax.request({
+    		method :'POST',
+    	    url: 'browser/A1/root',
+    	    params: {
+    	    	objectId: objectId,
+    	    	cmisaction : 'delete'
+    	    },
+    	    success: function(response){
+    	    	Ext.app.msg('Success', response.responseText);
+    	        me.getObjectsStore().reload();
+     	       	me.getFolderTreeStore().reload();
+    	    },failure: function(response) {
+    	    	Ext.Msg.alert("info",response.responseText);
+    	    }
+    	});
     },
     
     onAclClick: function( item, e, eOpts){

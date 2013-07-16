@@ -318,7 +318,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		rootFolder.setCreatedBy("Admin");
 		rootFolder.setModifiedBy("Admin");
 		rootFolder.setModifiedAtNow();
-		rootFolder.setRepositoryId(fRepositoryId);
 		rootFolder.setAclId(addAcl(InMemoryAcl.getDefaultAcl()));
 		rootFolder.persist();
 		fRootFolder = rootFolder;
@@ -328,7 +327,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		DocumentImpl doc = new DocumentImpl(this);
 		doc.createSystemBasePropertiesWhenCreated(propMap, user);
 		doc.setCustomProperties(propMap);
-		doc.setRepositoryId(fRepositoryId);
 		doc.setName(name);
 		if (null != folder) {
 			((FolderImpl) folder).addChildDocument(doc); // add document to
@@ -345,7 +343,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		StoredObjectImpl item = new ItemImpl(this);
 		item.createSystemBasePropertiesWhenCreated(propMap, user);
 		item.setCustomProperties(propMap);
-		item.setRepositoryId(fRepositoryId);
 		item.setName(name);
 		if (null != folder) {
 			((FolderImpl) folder).addChildItem(item); // add document to folder
@@ -362,7 +359,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		VersionedDocumentImpl doc = new VersionedDocumentImpl(this);
 		doc.createSystemBasePropertiesWhenCreated(propMap, user);
 		doc.setCustomProperties(propMap);
-		doc.setRepositoryId(fRepositoryId);
 		doc.setName(name);
 		DocumentVersion version = doc.addVersion(contentStream, versioningState, user);
 		if (null != folder) {
@@ -386,7 +382,6 @@ public class ObjectStoreImpl implements ObjectStore {
 			folder.createSystemBasePropertiesWhenCreated(propMap, user);
 			folder.setCustomProperties(propMap);
 		}
-		folder.setRepositoryId(fRepositoryId);
 		if (null != parent) {
 			((FolderImpl) parent).addChildFolder(folder); // add document to
 															// folder and set
@@ -402,7 +397,6 @@ public class ObjectStoreImpl implements ObjectStore {
 
 	public Folder createFolder(String name) {
 		Folder folder = new FolderImpl(this, name, null);
-		folder.setRepositoryId(fRepositoryId);
 		return folder;
 	}
 
@@ -410,7 +404,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		PolicyImpl policy = new PolicyImpl(this);
 		policy.createSystemBasePropertiesWhenCreated(propMap, user);
 		policy.setCustomProperties(propMap);
-		policy.setRepositoryId(fRepositoryId);
 		policy.setName(name);
 		policy.setPolicyText(policyText);
 		policy.persist();
@@ -437,7 +430,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		RelationshipImpl rel = new RelationshipImpl(this);
 		rel.createSystemBasePropertiesWhenCreated(propMap, user);
 		rel.setCustomProperties(propMap);
-		rel.setRepositoryId(fRepositoryId);
 		rel.setName(name);
 		if (null != sourceObject)
 			rel.setSource(sourceObject.getId());
@@ -640,6 +632,7 @@ public class ObjectStoreImpl implements ObjectStore {
 			aclId = getAclId(null, acl, null);
 		}
 		so.setAclId(aclId);
+		this.objects.updateAclId(so.getId(), aclId);
 		return aclId;
 	}
 
@@ -695,6 +688,7 @@ public class ObjectStoreImpl implements ObjectStore {
 	private Acl applyAcl(StoredObject so, Acl addAces, Acl removeAces) {
 		int aclId = getAclId((StoredObjectImpl) so, addAces, removeAces);
 		((StoredObjectImpl) so).setAclId(aclId);
+		this.objects.updateAclId(so.getId(), aclId);
 		return getAcl(aclId);
 	}
 
@@ -761,10 +755,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		// }
 		// }
 		return res;
-	}
-
-	public Set<String> getIds(){
-		return objects.keySet();
 	}
 	
 	public boolean isTypeInUse(String typeId) {

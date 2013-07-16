@@ -27,6 +27,8 @@ Ext.define('sphinx.controller.ContentGrid', {
             },
             'contentGrid toolbar #newFolder':{
             	click:this.onNewFolder
+            }, 'contentGrid toolbar #delete':{
+            	click:this.onDeteleClick
             },
             'createFolder button[action=save]':{
             	click:this.onCreateFolder
@@ -38,6 +40,31 @@ Ext.define('sphinx.controller.ContentGrid', {
     	
     },
 
+    onDeteleClick:function(){
+    	var me = this;
+    	var grid = Ext.ComponentQuery.query('#centerPanel contentGrid')[0];
+    	var models = grid.getSelectionModel( ).getSelection( );
+    	if(!models)	return;
+    	var completed = 0;
+    	models.forEach(function(item){
+    		var objectId=item.get('cmis:objectId');
+        	Ext.Ajax.request({
+        		method :'POST',
+        	    url: 'browser/A1/root',
+        	    params: {
+        	    	objectId: objectId,
+        	    	cmisaction : 'delete'
+        	    },callback :function(){
+        	    	completed++;
+        	    	if(completed==models.length){
+        	    		me.getObjectsStore().reload();
+          	       		me.getFolderTreeStore().reload();
+        	    	}
+        	    }
+        	});
+    	});
+    },
+    
     onItemdblclick:function( widget, record, item, index, e, eOpts ){
     	
     	var baseTypeId = record.get('cmis:baseTypeId');
@@ -99,8 +126,8 @@ Ext.define('sphinx.controller.ContentGrid', {
     	    },
     	    success: function(form, action) {
     	       Ext.app.msg('Success', action.response.responseText);
+    	       button.up('window').close();
     	       me.getObjectsStore().reload();
-    	       me.getFolderTreeStore().reload();
     	    },
     	    failure: function(form, action) {
     	    	Ext.Msg.alert("info",action.response.responseText);
@@ -128,6 +155,7 @@ Ext.define('sphinx.controller.ContentGrid', {
     	    },
     	    success: function(form, action) {
     	       Ext.app.msg('Success', action.response.responseText);
+    	       button.up('window').close();
     	       me.getObjectsStore().reload();
     	       me.getFolderTreeStore().reload();
     	    },

@@ -1,7 +1,7 @@
 Ext.define('sphinx.store.Objects', {
     extend: 'Ext.data.Store',
     model: 'sphinx.model.Object',
-    autoLoad: true,
+    autoLoad: false,
     remoteSort: true,
     pageSize: 10,
     
