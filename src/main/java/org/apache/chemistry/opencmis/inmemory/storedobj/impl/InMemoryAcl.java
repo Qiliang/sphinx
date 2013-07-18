@@ -31,6 +31,7 @@ import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlListImpl;
 import org.bson.BSONObject;
+import org.bson.types.ObjectId;
 import org.bson.util.StringRangeSet;
 
 import com.mongodb.BasicDBList;
@@ -39,6 +40,7 @@ import com.mongodb.DBObject;
 
 public class InMemoryAcl extends BasicDBObject implements Cloneable {
 
+	public static ObjectId defaultId=new ObjectId("000000000000000000000000");
 	private static final long serialVersionUID = -6858916824378131437L;
 	// private DbList<InMemoryAce> aces;
 	// private int id;
@@ -110,26 +112,14 @@ public class InMemoryAcl extends BasicDBObject implements Cloneable {
 		put("aces", aces);
 	}
 
-	// private void initAces() {
-	// aces = new DbList<InMemoryAce>();
-	// BasicDBList list = (BasicDBList) get("aces");
-	// if (list == null)
-	// return;
-	// for (Object o : list) {
-	// BasicDBObject dbObject = (BasicDBObject) o;
-	// aces.add(new InMemoryAce(dbObject.getString("principalId"),
-	// Permission.valueOf(dbObject.getString("permission"))));
-	// }
-	// }
-
-	public void setId(int id) {
+	public void setId(ObjectId id) {
 		put("_id", id);
 	}
 
-	public int getId() {
+	public ObjectId getId() {
 		if (containsField("_id"))
-			return getInt("_id");
-		return -1;
+			return getObjectId("_id");
+		return defaultId;
 	}
 
 	public final List<InMemoryAce> getAces() {

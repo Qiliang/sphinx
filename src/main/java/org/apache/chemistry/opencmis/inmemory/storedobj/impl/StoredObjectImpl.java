@@ -68,6 +68,7 @@ import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
 import org.apache.chemistry.opencmis.inmemory.types.PropertyCreationHelper;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
+import org.bson.types.ObjectId;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -529,11 +530,11 @@ public class StoredObjectImpl extends BasicDBObject implements StoredObject, DBO
 		return fObjStore.getAcl(getAclId());
 	}
 
-	public int getAclId() {
-		return getInt("aclId");
+	public ObjectId getAclId() {
+		return getObjectId("aclId");
 	}
 
-	public void setAclId(int aclId) {
+	public void setAclId(ObjectId aclId) {
 		put("aclId", aclId);
 	}
 

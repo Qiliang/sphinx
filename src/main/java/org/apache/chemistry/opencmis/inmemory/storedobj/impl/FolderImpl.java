@@ -51,6 +51,7 @@ import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.SingleFiling;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,7 +128,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 	}
 
 	public ChildrenResult getChildren(int maxItems, int skipCount, String user) {
-		List<Integer> aclIds = fObjStore.getAllAclsForUser(user, Permission.READ);
+		List<ObjectId> aclIds = fObjStore.getAllAclsForUser(user, Permission.READ);
 		BasicDBObject where = new BasicDBObject();
 		where.put("parentIds", new BasicDBObject("$in", new String[] { this.getId() }));
 		where.put("aclId", new BasicDBObject("$in", aclIds));
@@ -137,7 +138,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 	}
 
 	public ChildrenResult getFolderChildren(int maxItems, int skipCount, String user) {
-		List<Integer> aclIds = fObjStore.getAllAclsForUser(user, Permission.READ);
+		List<ObjectId> aclIds = fObjStore.getAllAclsForUser(user, Permission.READ);
 		BasicDBObject where = new BasicDBObject();
 		where.put("parentIds", new BasicDBObject("$in", new String[] { this.getId() }));
 		where.put("cmis:baseTypeId", BaseTypeId.CMIS_FOLDER.value());

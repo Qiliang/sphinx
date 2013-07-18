@@ -314,7 +314,8 @@ public class DefaultTypeSystemCreator implements TypeCreator {
 	private static TypeDefinition createGroupType() {
 		InMemoryItemTypeDefinition userType = new InMemoryItemTypeDefinition("system:group", "Group");
 		Map<String, PropertyDefinition<?>> propertyDefinitions = new HashMap<String, PropertyDefinition<?>>();
-		propertyDefinitions.put("system:users", PropertyCreationHelper.createStringDefinition("system:users", "users", Updatability.READWRITE));
+		propertyDefinitions.put("system:users", PropertyCreationHelper.createStringMultiDefinition("system:users", "users", Updatability.READWRITE));
+		propertyDefinitions.put("system:groups", PropertyCreationHelper.createStringMultiDefinition("system:groups", "groups", Updatability.READWRITE));
 		userType.addCustomPropertyDefinitions(propertyDefinitions);
 		return userType;
 	}

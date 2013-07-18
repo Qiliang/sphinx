@@ -22,13 +22,9 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -48,12 +44,10 @@ import org.apache.chemistry.opencmis.inmemory.ConfigConstants;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Document;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
-import org.apache.chemistry.opencmis.inmemory.storedobj.api.MultiFiling;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
-import org.apache.chemistry.opencmis.inmemory.storedobj.api.Relationship;
-import org.apache.chemistry.opencmis.inmemory.storedobj.api.SingleFiling;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
+import org.bson.types.ObjectId;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -150,10 +144,6 @@ public class ObjectStoreImpl implements ObjectStore {
 		return NEXT_UNUSED_ID++;
 	}
 
-	private synchronized Integer getNextAclId() {
-		return nextUnusedAclId++;
-	}
-
 	public void lock() {
 		// fLock.lock();
 	}
@@ -174,7 +164,7 @@ public class ObjectStoreImpl implements ObjectStore {
 	}
 
 	private StoredObject getObjectByName(String name, String parentId, String user) {
-		List<Integer> aclIds = this.getAllAclsForUser(user, Permission.READ);
+		List<ObjectId> aclIds = this.getAllAclsForUser(user, Permission.READ);
 		BasicDBObject where = new BasicDBObject();
 		where.put("parentIds", new BasicDBObject("$in", new String[] { parentId }));
 		where.put("name", name);
@@ -276,7 +266,7 @@ public class ObjectStoreImpl implements ObjectStore {
 			id = getNextId().toString();
 			so.put("_id", id);
 		}
-		
+
 		so.setBaseTypeId(getBasicTypeId(so));
 
 		objects.save(so);
@@ -291,7 +281,6 @@ public class ObjectStoreImpl implements ObjectStore {
 	void removeObject(String id) {
 		objects.remove(id);
 	}
-
 
 	/**
 	 * Clear repository and remove all data.
@@ -332,7 +321,7 @@ public class ObjectStoreImpl implements ObjectStore {
 			((FolderImpl) folder).addChildDocument(doc); // add document to
 															// folder and
 		}
-		int aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
+		ObjectId aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
 		doc.setAclId(aclId);
 		if (null != policies)
 			doc.setAppliedPolicies(policies);
@@ -350,7 +339,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		}
 		if (null != policies)
 			item.setAppliedPolicies(policies);
-		int aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
+		ObjectId aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
 		item.setAclId(aclId);
 		return item;
 	}
@@ -367,7 +356,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		}
 		version.createSystemBasePropertiesWhenCreated(propMap, user);
 		version.setCustomProperties(propMap);
-		int aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
+		ObjectId aclId = getAclId(((FolderImpl) folder), addACEs, removeACEs);
 		doc.setAclId(aclId);
 		if (null != policies)
 			doc.setAppliedPolicies(policies);
@@ -387,7 +376,7 @@ public class ObjectStoreImpl implements ObjectStore {
 															// folder and set
 		}
 
-		int aclId = getAclId(((FolderImpl) parent), addACEs, removeACEs);
+		ObjectId aclId = getAclId(((FolderImpl) parent), addACEs, removeACEs);
 		folder.setAclId(aclId);
 		if (null != policies)
 			folder.setAppliedPolicies(policies);
@@ -435,7 +424,7 @@ public class ObjectStoreImpl implements ObjectStore {
 			rel.setSource(sourceObject.getId());
 		if (null != targetObject)
 			rel.setTarget(targetObject.getId());
-		int aclId = getAclId(null, addACEs, removeACEs);
+		ObjectId aclId = getAclId(null, addACEs, removeACEs);
 		rel.setAclId(aclId);
 		rel.persist();
 		return rel;
@@ -483,15 +472,44 @@ public class ObjectStoreImpl implements ObjectStore {
 		}
 	}
 
-	public List<Integer> getAllAclsForUser(String principalId, Permission permission) {
+	private List<String> getPrincipalIds(String principalId) {
+		List<String> principalIds = new ArrayList<String>();
+		if (principalId == null)
+			return principalIds;
+		DBCursor dbCursor = objects.dbCollection.find(new BasicDBObject("$or",
+				new DBObject[] {
+						new BasicDBObject("system:users", new BasicDBObject("$in", new String[] { principalId })),
+						new BasicDBObject("system:groups", new BasicDBObject("$in", new String[] { principalId }))
+				}
+				));
+		try {
+			for (DBObject dbObject : dbCursor) {
+				String parentPrincipalId = dbObject.get("cmis:name").toString();
+				principalIds.add(parentPrincipalId);
+				principalIds.addAll(getPrincipalIds(parentPrincipalId));
+
+			}
+		} finally {
+			dbCursor.close();
+		}
+
+		return principalIds;
+	}
+
+	public List<ObjectId> getAllAclsForUser(String principalId, Permission permission) {
+		List<String> others = getPrincipalIds(principalId);
 		DBCursor cursor = acls.find();
 		try {
-			List<Integer> acls = new ArrayList<Integer>();
+			List<ObjectId> acls = new ArrayList<ObjectId>();
 			for (DBObject dbObject : cursor.toArray()) {
 				InMemoryAcl acl = new InMemoryAcl();
 				acl.putAll(dbObject);
 				if (acl.hasPermission(principalId, permission))
 					acls.add(acl.getId());
+				for (String otherId : others) {
+					if (acl.hasPermission(otherId, permission))
+						acls.add(acl.getId());
+				}
 			}
 			return acls;
 		} finally {
@@ -500,15 +518,15 @@ public class ObjectStoreImpl implements ObjectStore {
 
 	}
 
-	public Acl getAcl(int aclId) {
+	public Acl getAcl(ObjectId aclId) {
 		InMemoryAcl acl = getInMemoryAcl(aclId);
 		return acl == null ? InMemoryAcl.getDefaultAcl().toCommonsAcl() : acl.toCommonsAcl();
 	}
 
-	public int getAclId(StoredObjectImpl so, Acl addACEs, Acl removeACEs) {
+	public ObjectId getAclId(StoredObjectImpl so, Acl addACEs, Acl removeACEs) {
 		InMemoryAcl newAcl;
 		boolean removeDefaultAcl = false;
-		int aclId = 0;
+		ObjectId aclId = InMemoryAcl.getDefaultAcl().getId();
 
 		if (so == null) {
 			newAcl = new InMemoryAcl();
@@ -524,7 +542,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		}
 
 		if (newAcl.size() == 0 && addACEs == null && removeACEs == null)
-			return 0;
+			return InMemoryAcl.getDefaultAcl().getId();
 
 		if (null != removeACEs)
 			for (Ace ace : removeACEs.getAces()) {
@@ -533,17 +551,17 @@ public class ObjectStoreImpl implements ObjectStore {
 					removeDefaultAcl = true;
 			}
 
-		if (so != null && 0 == aclId && !removeDefaultAcl)
-			return 0; // if object grants full access to everyone and it will
-						// not be removed we do nothing
+		if (so != null && null == aclId && !removeDefaultAcl)
+			return InMemoryAcl.getDefaultAcl().getId();
+		// not be removed we do nothing
 
 		// add ACEs
 		if (null != addACEs)
 			for (Ace ace : addACEs.getAces()) {
 				InMemoryAce inMemAce = new InMemoryAce(ace);
 				if (inMemAce.equals(InMemoryAce.getDefaultAce()))
-					return 0; // if everyone has full access there is no need to
-								// add additional ACLs.
+					return InMemoryAcl.getDefaultAcl().getId();
+				// add additional ACLs.
 				newAcl.addAce(inMemAce);
 			}
 
@@ -557,7 +575,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		if (newAcl.size() > 0)
 			return addAcl(newAcl);
 		else
-			return 0;
+			return InMemoryAcl.getDefaultAcl().getId();
 	}
 
 	private void deleteFolder(String folderId, String user) {
@@ -611,11 +629,11 @@ public class ObjectStoreImpl implements ObjectStore {
 	private boolean hasAccess(String principalId, StoredObject so, Permission permission) {
 		if (null != principalId && principalId.equals(ADMIN_PRINCIPAL_ID))
 			return true;
-		List<Integer> aclIds = getAllAclsForUser(principalId, permission);
+		List<ObjectId> aclIds = getAllAclsForUser(principalId, permission);
 		return aclIds.contains(((StoredObjectImpl) so).getAclId());
 	}
 
-	private InMemoryAcl getInMemoryAcl(int aclId) {
+	private InMemoryAcl getInMemoryAcl(ObjectId aclId) {
 		DBObject dbObject = acls.findOne(new BasicDBObject("_id", aclId));
 		if (dbObject == null)
 			return null;
@@ -624,10 +642,10 @@ public class ObjectStoreImpl implements ObjectStore {
 		return acl;
 	}
 
-	private int setAcl(StoredObjectImpl so, Acl acl) {
-		int aclId;
+	private ObjectId setAcl(StoredObjectImpl so, Acl acl) {
+		ObjectId aclId;
 		if (null == acl || acl.getAces().isEmpty())
-			aclId = 0;
+			aclId = null;
 		else {
 			aclId = getAclId(null, acl, null);
 		}
@@ -643,7 +661,7 @@ public class ObjectStoreImpl implements ObjectStore {
 	 *            acl to be checked
 	 * @return 0 if Acl is not known, id of Acl otherwise
 	 */
-	private int hasAcl(InMemoryAcl acl) {
+	private ObjectId hasAcl(InMemoryAcl acl) {
 
 		DBCursor cursor = acls.find();
 		try {
@@ -656,37 +674,34 @@ public class ObjectStoreImpl implements ObjectStore {
 		} finally {
 			cursor.close();
 		}
-		return -1;
+		return null;
 	}
 
-	private int addAcl(InMemoryAcl acl) {
-		int aclId = -1;
+	private ObjectId addAcl(InMemoryAcl acl) {
+		ObjectId aclId = InMemoryAcl.defaultId;
 
 		if (null == acl)
-			return 0;
+			return null;
 
-		lock();
-		try {
-			aclId = hasAcl(acl);
-			if (aclId < 0) {
-				aclId = getNextAclId();
-				acl.setId(aclId);
-				acls.save(acl);
-				// acls.add(acl);
+		aclId = hasAcl(acl);
+		if (aclId == null) {
+			aclId=ObjectId.get();
+			if (acl.equals(InMemoryAcl.getDefaultAcl())) {
+				aclId = InMemoryAcl.defaultId;
 			}
-		} finally {
-			unlock();
+			acl.setId(aclId);
+			acls.insert(acl);
 		}
 		return aclId;
 	}
 
 	private Acl applyAcl(StoredObject so, Acl acl) {
-		int aclId = setAcl((StoredObjectImpl) so, acl);
+		ObjectId aclId = setAcl((StoredObjectImpl) so, acl);
 		return getAcl(aclId);
 	}
 
 	private Acl applyAcl(StoredObject so, Acl addAces, Acl removeAces) {
-		int aclId = getAclId((StoredObjectImpl) so, addAces, removeAces);
+		ObjectId aclId = getAclId((StoredObjectImpl) so, addAces, removeAces);
 		((StoredObjectImpl) so).setAclId(aclId);
 		this.objects.updateAclId(so.getId(), aclId);
 		return getAcl(aclId);
@@ -756,7 +771,7 @@ public class ObjectStoreImpl implements ObjectStore {
 		// }
 		return res;
 	}
-	
+
 	public boolean isTypeInUse(String typeId) {
 		// iterate over all the objects and check for each if the type matches
 		return this.has(new BasicDBObject("cmis:objectTypeId", typeId));

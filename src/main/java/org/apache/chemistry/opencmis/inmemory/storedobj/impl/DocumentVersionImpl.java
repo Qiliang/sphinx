@@ -39,6 +39,7 @@ import org.apache.chemistry.opencmis.inmemory.storedobj.api.DocumentVersion;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.Folder;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.VersionedDocument;
+import org.bson.types.ObjectId;
 
 /**
  * A class representing a single version of a document
@@ -281,12 +282,12 @@ public class DocumentVersionImpl extends StoredObjectImpl implements DocumentVer
     }
 
     @Override
-    public int getAclId() {
+    public ObjectId getAclId() {
         return ((StoredObjectImpl)fContainer).getAclId();
     }    
 
     @Override
-    public void setAclId(int id) {
+    public void setAclId(ObjectId id) {
         ((StoredObjectImpl)fContainer).setAclId(id);
     }    
     

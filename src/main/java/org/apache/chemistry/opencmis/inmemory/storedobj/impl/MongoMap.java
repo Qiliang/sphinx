@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.ObjectStore;
 import org.apache.chemistry.opencmis.inmemory.storedobj.api.StoredObject;
+import org.bson.types.ObjectId;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -33,7 +34,7 @@ public class MongoMap {
 		dbCollection.save(jo);
 	}
 
-	public void updateAclId(String id, int aclId) {
+	public void updateAclId(String id, ObjectId aclId) {
 		this.dbCollection.update(new BasicDBObject("_id", id), new BasicDBObject("$set", new BasicDBObject("aclId", aclId)));
 	}
 

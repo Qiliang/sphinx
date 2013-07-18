@@ -47,13 +47,13 @@ Ext.define('sphinx.view.system.group.Create', {
 	            value: 'system:users'
             },{
                 xtype: 'itemselector',
-                name: 'propertyValue[2]',
+                //name: 'propertyValue[2]',
                 height: 250,
                 anchor: '100%',
                 fieldLabel: '用户',
                 store:  'Users',
                 displayField: 'cmis:name',
-                valueField: 'cmis:objectId',
+                valueField: 'cmis:name',
                 allowBlank: false,
                 buttons: ['add', 'remove']
             }

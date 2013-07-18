@@ -31,7 +31,7 @@ Ext.define('sphinx.store.Groups', {
         sortParam: 'orderBy',
         extraParams:{  
         	cmisselector:'query',
-        	q:'select cmis:name,system:users from system:group',
+        	q:'select * from system:group',
         	succinct:true
         },
         reader: {

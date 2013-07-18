@@ -26,7 +26,7 @@ Ext.define('sphinx.view.document.CreateACL', {
         items: [
 			{
 	            xtype: 'combobox',
-	            store:'Users',
+	            store:'Groups',
 	            name: 'addACEPrincipal[0]',
 	            displayField: "cmis:name",
                 valueField: "cmis:name",

@@ -30,6 +30,7 @@ import org.apache.chemistry.opencmis.commons.enums.IncludeRelationships;
 import org.apache.chemistry.opencmis.commons.enums.RelationshipDirection;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.inmemory.storedobj.impl.Permission;
+import org.bson.types.ObjectId;
 
 import com.mongodb.DBObject;
 
@@ -303,7 +304,7 @@ public interface ObjectStore {
 
 	ContentStream getContentStream(String contentStreamId);
 
-	Acl getAcl(int aclId);
+	Acl getAcl(ObjectId aclId);
 
 	void lock();
 
@@ -319,7 +320,7 @@ public interface ObjectStore {
 	
 	int count(DBObject where);
 
-	List<Integer> getAllAclsForUser(String user, Permission permission);
+	List<ObjectId> getAllAclsForUser(String user, Permission permission);
 	
 	boolean has(DBObject where);
 

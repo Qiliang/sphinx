@@ -47,18 +47,23 @@ Ext.define('sphinx.controller.system.Groups', {
     onSave: function(button, e, eOpts){
     	var me= this;
     	var form = button.up('form').getForm();
+    	var itemselector=button.up('form').down('itemselector');
     	var values = form.getValues();
-    	//values.userselector
+    	var users = itemselector.getValue();
     	
-    	
+    	var params={
+    			cmisaction : 'createItem',
+    	    	succinct:true
+    	};
+    	users.forEach(function(userId,index){
+    		var key = 'propertyValue[2]['+index+']' ;
+    		params[key]=userId;
+    	});
     	
     	form.submit({
     	    clientValidation: true,
     	    url: 'browser/A1',
-    	    params: {
-    	    	cmisaction : 'createItem',
-    	    	succinct:true
-    	    },
+    	    params: params,
     	    success: function(form, action) {
     	       Ext.app.msg('Success', action.response.responseText);
     	       button.up('window').close();

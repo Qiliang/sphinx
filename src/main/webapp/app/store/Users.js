@@ -1,7 +1,7 @@
 Ext.define('sphinx.store.Users', {
     extend: 'Ext.data.Store',
     model: 'sphinx.model.User',
-    autoLoad: false,
+    autoLoad: true,
     remoteSort: true,
     pageSize: 10,
     
@@ -31,7 +31,7 @@ Ext.define('sphinx.store.Users', {
         sortParam: 'orderBy',
         extraParams:{  
         	cmisselector:'query',
-        	q:'select cmis:name,system:password from system:user',
+        	q:'select * from system:user',
         	succinct:true
         },
         reader: {
