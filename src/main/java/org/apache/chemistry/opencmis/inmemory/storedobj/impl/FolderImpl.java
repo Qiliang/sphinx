@@ -132,8 +132,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 		BasicDBObject where = new BasicDBObject();
 		where.put("parentIds", new BasicDBObject("$in", new String[] { this.getId() }));
 		where.put("aclId", new BasicDBObject("$in", aclIds));
-		System.out.println(where.toString());
-		List<StoredObject> result = fObjStore.find(where, new BasicDBObject("modifiedAt", -1), maxItems, skipCount);
+		List<StoredObject> result = fObjStore.find(where, new BasicDBObject("cmis:lastModificationDate", -1), maxItems, skipCount);
 		return new ChildrenResult(result, fObjStore.count(where));
 	}
 
@@ -143,8 +142,7 @@ public class FolderImpl extends AbstractSingleFilingImpl implements Folder {
 		where.put("parentIds", new BasicDBObject("$in", new String[] { this.getId() }));
 		where.put("cmis:baseTypeId", BaseTypeId.CMIS_FOLDER.value());
 		where.put("aclId", new BasicDBObject("$in", aclIds));
-		System.out.println(where.toString());
-		List<StoredObject> result = fObjStore.find(where, new BasicDBObject("modifiedAt", -1), maxItems, skipCount);
+		List<StoredObject> result = fObjStore.find(where, new BasicDBObject("cmis:lastModificationDate", -1), maxItems, skipCount);
 		return new ChildrenResult(result, fObjStore.count(where));
 	}
 

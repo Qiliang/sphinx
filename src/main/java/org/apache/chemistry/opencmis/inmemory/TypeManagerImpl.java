@@ -92,6 +92,7 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 
 	private void init() {
 		DBCursor dbCursor = types.find();
+		System.out.println(dbCursor.toString());
 		try {
 			for (DBObject o : dbCursor) {
 				TypeDefinition typeDefinition = BSONConverter.toTypeDefinition(ChemistryTypeObject.wrap(o), true);
@@ -228,7 +229,8 @@ public class TypeManagerImpl implements TypeManagerCreatable {
 
 		// add new type to children of parent types
 		TypeDefinitionContainer parentTypeContainer = getTypeById(cmisType.getParentTypeId());
-		parentTypeContainer.getChildren().add(typeContainer);
+		if (parentTypeContainer != null)
+			parentTypeContainer.getChildren().add(typeContainer);
 
 		// recursively add inherited properties
 		Map<String, PropertyDefinition<?>> propDefs = typeContainer.getTypeDefinition().getPropertyDefinitions();

@@ -61,19 +61,19 @@ public class MongoMap {
 		}
 	}
 
-	public Set<String> keySet() {
-
-		BasicDBObject keys = new BasicDBObject();
-		keys.put("_id", 1);
-		DBCursor dbCursor = dbCollection.find(new BasicDBObject(), keys);
-		HashSet<String> ids = new LinkedHashSet<String>();
-		for (DBObject dbObject : dbCursor) {
-			ids.add(dbObject.get("_id").toString());
-		}
-		dbCursor.close();
-
-		return ids;
-	}
+//	public Set<String> keySet() {
+//
+//		BasicDBObject keys = new BasicDBObject();
+//		keys.put("_id", 1);
+//		DBCursor dbCursor = dbCollection.find(new BasicDBObject(), keys);
+//		HashSet<String> ids = new LinkedHashSet<String>();
+//		for (DBObject dbObject : dbCursor) {
+//			ids.add(dbObject.get("_id").toString());
+//		}
+//		dbCursor.close();
+//
+//		return ids;
+//	}
 
 	public StoredObject convert(DBObject dbObject) {
 		if (dbObject == null)
@@ -84,6 +84,7 @@ public class MongoMap {
 	}
 
 	public List<StoredObject> from(DBCursor dbCursor) {
+		System.out.println(dbCursor.toString());
 		List<StoredObject> objects = new ArrayList<StoredObject>();
 		try {
 			for (DBObject dbObject : dbCursor) {

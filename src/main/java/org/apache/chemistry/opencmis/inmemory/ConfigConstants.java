@@ -48,7 +48,7 @@ public class ConfigConstants {
     public static final String CLEAN_REPOSITORY_INTERVAL = "InMemoryServer.CleanIntervalMinutes";
     public static final String DEPLOYMENT_TIME = "InMemoryServer.DeploymentTime";
     
-    public static final String DB_HOST="localhost";
+    public static final String DB_HOST="192.168.1.31";
     
     private ConfigConstants() {
     }

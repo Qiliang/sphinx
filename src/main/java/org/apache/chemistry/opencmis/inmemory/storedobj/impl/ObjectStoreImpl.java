@@ -482,6 +482,7 @@ public class ObjectStoreImpl implements ObjectStore {
 						new BasicDBObject("system:groups", new BasicDBObject("$in", new String[] { principalId }))
 				}
 				));
+		System.out.println(dbCursor.toString());
 		try {
 			for (DBObject dbObject : dbCursor) {
 				String parentPrincipalId = dbObject.get("cmis:name").toString();
